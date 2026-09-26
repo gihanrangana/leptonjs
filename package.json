@@ -1,0 +1,32 @@
+{
+    "name": "leptonjs-desktop",
+    "version": "0.1.0-beta.1",
+    "description": "LeptonJS private workspace (not published). Runtime packages live under packages/.",
+    "private": true,
+    "license": "MIT",
+    "scripts": {
+        "build:native": "napi build --platform --release --manifest-path native/Cargo.toml --output-dir packages/native-win32-x64-msvc --no-js",
+        "build:host": "cargo install --path host --root packages/cli/host --target-dir host/target --force",
+        "build:packages": "pnpm --filter @leptonjs/registry --filter @leptonjs/native --filter @leptonjs/core --filter @leptonjs/client --filter @leptonjs/vite --filter @leptonjs/react -r build",
+        "build": "pnpm build:native && pnpm build:host && pnpm build:packages && pnpm --filter @leptonjs/cli build",
+        "cli": "node packages/cli/bin/leptonjs.js",
+        "leptonjs": "node packages/cli/bin/leptonjs.js",
+        "dev": "node packages/cli/bin/leptonjs.js dev",
+        "lint": "biome lint .",
+        "format": "biome format --write .",
+        "check": "biome check ."
+    },
+    "packageManager": "pnpm@11.24.0+sha512.bd27e345e976dcb0be0b7a1228217b049a817e21b1f355c90dbe7dc46671895a8bc1e6d06c24554505ea93ea0b45f489a27ec1bfbc8de6a9659fca0f16fa0000",
+    "devDependencies": {
+        "@leptonjs/cli": "workspace:*",
+        "@biomejs/biome": "2.5.10",
+        "@napi-rs/cli": "3.8.6",
+        "@types/node": "22.20.1",
+        "tsx": "4.23.12",
+        "typescript": "7.0.2"
+    },
+    "napi": {
+        "binaryName": "leptonjs-desktop-native",
+        "triples": {}
+    }
+}

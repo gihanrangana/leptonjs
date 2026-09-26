@@ -1,0 +1,48 @@
+{
+    "name": "@leptonjs/cli",
+    "version": "0.1.0-beta.1",
+    "description": "LeptonJS CLI (dev / build / start / pack).",
+    "license": "MIT",
+    "type": "module",
+    "bin": {
+        "leptonjs": "./bin/leptonjs.js"
+    },
+    "files": [
+        "dist",
+        "bin",
+        "host/bin",
+        "installer",
+        "assets"
+    ],
+    "scripts": {
+        "build": "esbuild src/index.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/index.js --jsx=automatic",
+        "typecheck": "tsc -p tsconfig.json",
+        "start": "node dist/index.js",
+        "dev": "node --import tsx src/index.ts",
+        "prepublishOnly": "node ./scripts/check-publish.mjs && pnpm build"
+    },
+    "engines": {
+        "node": ">=22.12.0"
+    },
+    "dependencies": {
+        "bytenode": "^1.6.0",
+        "esbuild": "^0.28.2",
+        "figlet": "^1.11.4",
+        "ink": "^7.1.1",
+        "ora": "^9.4.1",
+        "rcedit": "^5.0.2",
+        "react": "^19.2.4",
+        "tsx": "^4.23.12",
+        "zod": "^4.6.2"
+    },
+    "devDependencies": {
+        "@types/figlet": "^1.7.0",
+        "@types/node": "^22.20.1",
+        "@types/react": "^19.2.18",
+        "typescript": "~5.9.3"
+    },
+    "publishConfig": {
+        "access": "public",
+        "tag": "beta"
+    }
+}

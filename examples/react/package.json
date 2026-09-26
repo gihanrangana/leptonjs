@@ -1,0 +1,43 @@
+{
+    "name": "@leptonjs/example-react",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "start": "tsx --tsconfig tsconfig.backend.json src/backend/main.ts",
+        "build": "tsc -b && vite build",
+        "lint": "oxlint",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "react": "^19.2.8",
+        "react-dom": "^19.2.8",
+        "zod": "^4.4.3",
+        "@leptonjs/core": "workspace:*",
+        "@leptonjs/client": "workspace:*",
+        "@leptonjs/registry": "workspace:*",
+        "@leptonjs/react": "workspace:*"
+    },
+    "devDependencies": {
+        "@types/node": "^22.20.1",
+        "@types/react": "^19.2.18",
+        "@types/react-dom": "^19.2.4",
+        "@vitejs/plugin-react": "^6.1.0",
+        "@leptonjs/vite": "workspace:*",
+        "oxlint": "^1.79.0",
+        "tsx": "4.23.12",
+        "typescript": "~6.0.2",
+        "vite": "^8.2.2"
+    },
+    "lepton": {
+        "frontend": ".",
+        "backend": "src/backend/main.ts",
+        "watch": [
+            "src/backend",
+            "src/shared"
+        ],
+        "port": 5173,
+        "backendTsconfig": "tsconfig.backend.json"
+    }
+}

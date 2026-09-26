@@ -1,0 +1,23 @@
+{
+    "name": "@leptonjs/native-win32-x64-msvc",
+    "version": "0.1.0-beta.1",
+    "description": "LeptonJS native addon (Windows x64 MSVC).",
+    "license": "MIT",
+    "os": [
+        "win32"
+    ],
+    "cpu": [
+        "x64"
+    ],
+    "main": "./leptonjs-desktop-native.win32-x64-msvc.node",
+    "files": [
+        "*.node"
+    ],
+    "publishConfig": {
+        "access": "public",
+        "tag": "beta"
+    },
+    "engines": {
+        "node": ">=22.12.0"
+    }
+}

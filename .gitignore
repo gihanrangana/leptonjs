@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Native addon (Rust / napi-rs) build artifacts
+native/target/
+host/target/
+
+# cargo install metadata — keep the stub binary for the CLI tarball
+packages/cli/host/*
+!packages/cli/host/bin/
+!packages/cli/host/bin/**
+
+# keep other *.node out of git, but publish the platform package binary
+*.node
+!packages/native-win32-x64-msvc/*.node
+
+# Examples
+examples/**/dist-backend/
+examples/**/release/
+
+# Rust
+**/*.rs.bk
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+.cursor/
+
+# Biome cache
+.biome/

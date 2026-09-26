@@ -1,0 +1,23 @@
+[package]
+name = "lepton-host"
+version = "0.1.0-beta.1"
+edition = "2021"
+rust-version = "1.85"
+publish = false
+
+[[bin]]
+name = "lepton-host"
+path = "src/main.rs"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61.2", features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_JobObjects",
+    "Win32_Security",
+] }
+
+[profile.release]
+lto = true
+opt-level = "z"
+strip = "symbols"
