@@ -3,6 +3,13 @@
     "version": "0.1.0-beta.1",
     "description": "LeptonJS native addon (Windows x64 MSVC).",
     "license": "MIT",
+    "author": "Gihan Rangana <gihanrangana@gmail.com>",
+    "homepage": "https://github.com/gihanrangana/leptonjs#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/gihanrangana/leptonjs.git",
+        "directory": "packages/native-win32-x64-msvc"
+    },
     "os": [
         "win32"
     ],

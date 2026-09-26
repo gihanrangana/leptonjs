@@ -14,6 +14,13 @@
         "installer",
         "assets"
     ],
+    "author": "Gihan Rangana <gihanrangana@gmail.com>",
+    "homepage": "https://github.com/gihanrangana/leptonjs#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/gihanrangana/leptonjs.git",
+        "directory": "packages/cli"
+    },
     "scripts": {
         "build": "esbuild src/index.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/index.js --jsx=automatic",
         "typecheck": "tsc -p tsconfig.json",
