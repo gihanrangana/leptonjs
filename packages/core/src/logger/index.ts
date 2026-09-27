@@ -56,7 +56,7 @@ export class LeptonLogger implements Logger {
         if (entry.details !== undefined && !(entry.stack && entry.details === entry.message)) {
             const detailsString =
                 typeof entry.details === 'string' ? entry.details : JSON.stringify(entry.details);
-            text += `Details: ${detailsString}`;
+            text += `\n  Details: ${detailsString}`;
         }
 
         if (entry.stack) text += `\n${entry.stack}`;

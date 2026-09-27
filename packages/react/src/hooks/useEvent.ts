@@ -9,7 +9,8 @@ import { useEffect, useState } from 'react';
 export const useEvent = <E extends TypedEvent<unknown>>(event: E, initial: EventPayload<E>) => {
     const [value, setValue] = useState<EventPayload<E>>(initial);
 
-    useEffect(() => listen(event, setValue), [event]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed by name, not object ref
+    useEffect(() => listen(event, setValue), [event.name]);
 
     return value;
 };

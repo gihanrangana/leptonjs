@@ -44,6 +44,29 @@ export const createIpcServer = <R extends RouteMap>(
     let server: Server | null = null;
     let assignedPort = 0;
 
+    // SSE keepalive: prevent WebView2 from dropping idle connections (~60-120s timeout)
+    const SSE_KEEPALIVE_MS = 30_000;
+    let keepaliveTimer: ReturnType<typeof setInterval> | null = null;
+
+    const startKeepalive = (): void => {
+        if (keepaliveTimer) return;
+        keepaliveTimer = setInterval(() => {
+            for (const client of sseClients) {
+                try {
+                    client.write(': keepalive\n\n');
+                } catch { /* client already gone */ }
+            }
+        }, SSE_KEEPALIVE_MS);
+        keepaliveTimer.unref();
+    };
+
+    const stopKeepalive = (): void => {
+        if (keepaliveTimer) {
+            clearInterval(keepaliveTimer);
+            keepaliveTimer = null;
+        }
+    };
+
     const parseIpcRequest = (raw: unknown): IpcRequest | null => {
         if (!raw || typeof raw !== 'object') return null;
         const body = raw as Record<string, unknown>;
@@ -125,12 +148,14 @@ export const createIpcServer = <R extends RouteMap>(
         res.write(': connected\n\n');
 
         sseClients.add(res);
+        startKeepalive();
 
         logger.debug('ipc', 'SSE client connected');
 
         req.on('close', () => {
             sseClients.delete(res);
             res.destroy();
+            if (sseClients.size === 0) stopKeepalive();
             logger.debug('ipc', 'SSE client disconnected');
         });
     };
@@ -241,7 +266,8 @@ export const createIpcServer = <R extends RouteMap>(
             });
         },
         stop() {
-            return new Promise<void>((resolve) => {
+            return new Promise<void>((resolve, reject) => {
+                stopKeepalive();
                 for (const client of sseClients) client.destroy();
                 sseClients.clear();
                 const current = server;
@@ -250,7 +276,7 @@ export const createIpcServer = <R extends RouteMap>(
                     resolve();
                     return;
                 }
-                current.close(() => resolve());
+                current.close((err) => (err ? reject(err) : resolve()));
             });
         },
         handle<K extends keyof R & string>(route: R[K], handler: Handler<R[K]>): void {

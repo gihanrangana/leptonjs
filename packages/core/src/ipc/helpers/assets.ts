@@ -3,9 +3,11 @@
  *
  * Serves built frontend assets (e.g. `client/dist`) with an SPA fallback to
  * `index.html`, so client-side routing works. Path-traversal safe.
+ *
+ * Uses streaming I/O (`createReadStream`) to avoid blocking the event loop.
  */
 
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, statSync } from 'node:fs';
 import type { ServerResponse } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 
@@ -65,7 +67,7 @@ export const createAssetHandler = (
 
         const mime = MIME[extname(filePath).toLowerCase()] ?? `application/octet-stream`;
         res.writeHead(200, { 'Content-Type': mime });
-        res.end(readFileSync(filePath));
+        createReadStream(filePath).pipe(res);
         return true;
     };
 };

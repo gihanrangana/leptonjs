@@ -28,7 +28,7 @@ import { EventEmitter } from 'node:events';
 import { watch as fsWatch, statSync } from 'node:fs';
 import { dirname, relative, resolve as resolvePath, sep } from 'node:path';
 import { native } from '@leptonjs/native';
-import { defineEvents, defineRoutes, event, findRoute, route } from '@leptonjs/registry';
+import { defineEvents, defineRoutes, event, findEvent, findRoute, route } from '@leptonjs/registry';
 import { importSetupFresh } from './helpers';
 import { DEFAULT_MAIN_WINDOW } from './helpers/constants';
 import { openMainAndOptionalSplash, resolveSplash } from './helpers/splash';
@@ -590,4 +590,4 @@ export type {
     TypedEvent,
     WindowEventListener,
 };
-export { defineEvents, defineRoutes, event, findRoute, route, WindowEventKind };
+export { defineEvents, defineRoutes, event, findEvent, findRoute, route, WindowEventKind };

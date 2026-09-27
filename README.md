@@ -1,10 +1,27 @@
-# LeptonJS
+<p align="center">
+  <a href="https://github.com/gihanrangana/leptonjs">
+    <img src="assets/logo.svg" alt="LeptonJS" width="420" />
+  </a>
+</p>
 
-Build native desktop apps with **Node.js** and **web technologies** — no bundled Chromium.
+<p align="center">
+  Build native desktop apps with <strong>Node.js</strong> and <strong>web technologies</strong> — no bundled Chromium.
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/@leptonjs/core"><img src="https://img.shields.io/npm/v/@leptonjs/core?style=flat-square&color=f36f22&label=npm" alt="npm version" /></a>
+  <a href="https://github.com/gihanrangana/leptonjs/blob/main/LICENSE"><img src="https://img.shields.io/github/license/gihanrangana/leptonjs?style=flat-square&color=416bb3" alt="license" /></a>
+  <img src="https://img.shields.io/badge/node-%E2%89%A5%2022.12-brightgreen?style=flat-square&logo=node.js&logoColor=white" alt="node version" />
+  <img src="https://img.shields.io/badge/platform-Windows%20x64-0078D4?style=flat-square&logo=windows&logoColor=white" alt="platform" />
+  <a href="https://github.com/gihanrangana/leptonjs/pulls"><img src="https://img.shields.io/badge/PRs-welcome-f36f22?style=flat-square" alt="PRs welcome" /></a>
+  <a href="https://github.com/gihanrangana/leptonjs/stargazers"><img src="https://img.shields.io/github/stars/gihanrangana/leptonjs?style=flat-square&color=f5a623" alt="GitHub stars" /></a>
+</p>
+
+<br />
 
 LeptonJS pairs a full Node.js backend with the OS-native WebView (`wry` / `tao`), giving you Electron-like DX at a fraction of the binary size. Define typed IPC routes with Zod, call them from your React (or vanilla JS) frontend, and ship production binaries with a single CLI command.
 
-> **Status:** `0.1.0-beta.1` — Windows x64 only. API may change. WebView2 Evergreen is required.
+> **Status:** `0.1.0-beta.2` — Windows x64 only. API may change. WebView2 Evergreen is required.
 
 ---
 
@@ -405,14 +422,14 @@ When consuming published packages from npm (not workspace links):
 ```json
 {
   "dependencies": {
-    "@leptonjs/core": "0.1.0-beta.1",
-    "@leptonjs/client": "0.1.0-beta.1",
-    "@leptonjs/registry": "0.1.0-beta.1",
-    "@leptonjs/react": "0.1.0-beta.1"
+    "@leptonjs/core": "0.1.0-beta.2",
+    "@leptonjs/client": "0.1.0-beta.2",
+    "@leptonjs/registry": "0.1.0-beta.2",
+    "@leptonjs/react": "0.1.0-beta.2"
   },
   "devDependencies": {
-    "@leptonjs/cli": "0.1.0-beta.1",
-    "@leptonjs/vite": "0.1.0-beta.1"
+    "@leptonjs/cli": "0.1.0-beta.2",
+    "@leptonjs/vite": "0.1.0-beta.2"
   }
 }
 ```
