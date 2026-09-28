@@ -1,0 +1,19 @@
+When generating a Git commit message for this repository (including the Source Control sparkle button), use EXACTLY this conventional format. One short subject line. No quotes around the message.
+
+```text
+fix(core): keep decorations when showing hidden main window
+feat(cli): add --no-tui flag for CI logs
+docs: clarify app.start setup for contributors
+```
+
+Rules:
+- Format: `type(scope): subject` or `type: subject` when no package fits
+- Types: feat, fix, docs, chore, refactor, test, ci, style
+- Scopes: core, cli, native, registry, client, react, vite, or omit
+- Subject: lowercase, imperative, no trailing period, one line
+- Never write a sentence like "Enhance X and add Y for improved Z"
+
+Examples for this repo:
+- docs: add Biome lint rules to the contributing guide
+- ci: run Biome on changed files in pull requests
+- chore: add pnpm validate for local PR checks
