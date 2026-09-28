@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/@leptonjs/core"><img src="https://img.shields.io/npm/v/@leptonjs/core?style=flat-square&color=f36f22&label=npm" alt="npm version" /></a>
   <a href="https://github.com/gihanrangana/leptonjs/blob/main/LICENSE"><img src="https://img.shields.io/github/license/gihanrangana/leptonjs?style=flat-square&color=416bb3" alt="license" /></a>
-  <img src="https://img.shields.io/badge/node-%E2%89%A5%2022.12-brightgreen?style=flat-square&logo=node.js&logoColor=white" alt="node version" />
+  <img src="https://img.shields.io/badge/node-%E2%89%A5%2022.23-brightgreen?style=flat-square&logo=node.js&logoColor=white" alt="node version" />
   <img src="https://img.shields.io/badge/platform-Windows%20x64-0078D4?style=flat-square&logo=windows&logoColor=white" alt="platform" />
   <a href="https://github.com/gihanrangana/leptonjs/pulls"><img src="https://img.shields.io/badge/PRs-welcome-f36f22?style=flat-square" alt="PRs welcome" /></a>
   <a href="https://github.com/gihanrangana/leptonjs/stargazers"><img src="https://img.shields.io/github/stars/gihanrangana/leptonjs?style=flat-square&color=f5a623" alt="GitHub stars" /></a>
@@ -445,7 +445,7 @@ When consuming published packages from npm (not workspace links):
 
 | Requirement  | Details                                             |
 | ------------ | --------------------------------------------------- |
-| **Node.js**  | ≥ 22.12                                             |
+| **Node.js**  | ≥ 22.23                                             |
 | **OS**       | Windows x64 (beta)                                  |
 | **WebView2** | Evergreen runtime (pre-installed on modern Windows) |
 | **Rust**     | Required only to build native addon from source     |

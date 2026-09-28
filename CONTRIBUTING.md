@@ -12,7 +12,7 @@ Thanks for wanting to help. This guide keeps things short so you can get product
 
 | Tool | Notes |
 |------|--------|
-| **Node.js** | ≥ 22.12 (CLI / OpenTUI paths may need a newer Node — see package engines) |
+| **Node.js** | ≥ 22.23 (CLI / OpenTUI paths may need a newer Node — see package engines) |
 | **pnpm** | `11.24.0` (see `packageManager` in root `package.json`) |
 | **Rust** | Stable toolchain + MSVC Build Tools (Windows) for the native addon |
 | **WebView2** | Evergreen runtime on Windows |
