@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 concurrency:
   group: publish-npm-${{ github.ref }}
@@ -20,23 +21,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check tag matches package versions
+      - name: Check tag matches @leptonjs/core
+        if: github.ref_type == 'tag'
         shell: pwsh
         run: |
           $expected = '${{ github.ref_name }}'.TrimStart('v')
-          $files = @('package.json') + (Get-ChildItem -Path packages -Filter package.json -Recurse -File | ForEach-Object { $_.FullName })
-          foreach ($file in $files) {
-            $version = (Get-Content $file -Raw | ConvertFrom-Json).version
-            if ($version -ne $expected) {
-              throw "$file version '$version' does not match tag '$expected'"
-            }
+          $core = (Get-Content packages/core/package.json -Raw | ConvertFrom-Json).version
+          if ($core -ne $expected) {
+            throw "@leptonjs/core is '$core' but tag is 'v$expected'"
           }
-          Write-Host "All package versions match $expected"
+          Write-Host "Tag v$expected matches @leptonjs/core"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 11.24.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -61,7 +58,7 @@ jobs:
       - name: Build native, host, and packages
         run: pnpm build
 
-      - name: Publish @leptonjs packages
-        run: pnpm publish -r --filter "./packages/*" --access public --no-git-checks
+      - name: Publish unpublished @leptonjs packages
+        run: node scripts/publish-unpublished.mjs
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
