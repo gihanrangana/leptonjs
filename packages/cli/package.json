@@ -29,7 +29,7 @@
         "prepublishOnly": "node ./scripts/check-publish.mjs && pnpm build"
     },
     "engines": {
-        "node": ">=22.12.0"
+        "node": ">=22.23.0"
     },
     "dependencies": {
         "bytenode": "^1.6.0",

@@ -43,7 +43,7 @@ pnpm build:native
 ### Build Requirements
 
 - Rust stable toolchain
-- Node.js ≥ 22.12
+- Node.js ≥ 22.23
 - `@napi-rs/cli` (devDependency of the workspace root)
 
 ## License

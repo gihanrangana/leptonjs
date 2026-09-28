@@ -106,7 +106,7 @@ This runs `napi build` against the Rust source in `native/` and outputs the `.no
 ### Requirements
 
 - **Rust** toolchain (stable)
-- **Node.js ≥ 22.12**
+- **Node.js ≥ 22.23**
 - **Windows x64** with WebView2 Evergreen runtime
 
 ## License
