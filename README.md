@@ -21,7 +21,7 @@
 
 LeptonJS pairs a full Node.js backend with the OS-native WebView (`wry` / `tao`), giving you Electron-like DX at a fraction of the binary size. Define typed IPC routes with Zod, call them from your React (or vanilla JS) frontend, and ship production binaries with a single CLI command.
 
-> **Status:** `0.1.0-beta.2` — Windows x64 only. API may change. WebView2 Evergreen is required.
+> **Status:** `0.1.0-beta.3` — Windows x64 only. API may change. WebView2 Evergreen is required.
 
 ---
 
@@ -422,14 +422,14 @@ When consuming published packages from npm (not workspace links):
 ```json
 {
   "dependencies": {
-    "@leptonjs/core": "0.1.0-beta.2",
-    "@leptonjs/client": "0.1.0-beta.2",
-    "@leptonjs/registry": "0.1.0-beta.2",
-    "@leptonjs/react": "0.1.0-beta.2"
+    "@leptonjs/core": "0.1.0-beta.3",
+    "@leptonjs/client": "0.1.0-beta.3",
+    "@leptonjs/registry": "0.1.0-beta.3",
+    "@leptonjs/react": "0.1.0-beta.3"
   },
   "devDependencies": {
-    "@leptonjs/cli": "0.1.0-beta.2",
-    "@leptonjs/vite": "0.1.0-beta.2"
+    "@leptonjs/cli": "0.1.0-beta.3",
+    "@leptonjs/vite": "0.1.0-beta.3"
   }
 }
 ```
