@@ -12,7 +12,7 @@ import {
     unlinkSync,
 } from 'node:fs';
 import https from 'node:https';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 export const platformTriple = (
     platform = process.platform,
@@ -34,6 +34,18 @@ export const platformTriple = (
         default:
             throw new Error(`Unsupported platform: ${platform}-${arch}`);
     }
+};
+
+const isAllowedCommand = (cmd: string): boolean => {
+    if (cmd.includes('\0')) return false;
+    if (cmd === process.execPath) return true;
+
+    const name = basename(cmd);
+    if (name === 'tar' || name === 'node' || name === 'node.exe') return true;
+    if (name === 'ISCC.exe' || name === 'iscc.exe' || name === 'vswhere.exe') return true;
+    if (name.endsWith('-runtime.exe') || name.endsWith('-runtime')) return true;
+
+    return /^innosetup-\d+\.\d+\.\d+-(x64|x86)\.exe$/i.test(name);
 };
 
 export const nodeBinaryName = (platform: NodeJS.Platform): string =>
@@ -62,15 +74,24 @@ export const spawnAsync = (
     opts?: { cwd?: string; env?: NodeJS.ProcessEnv },
 ): Promise<{ code: number; stdout: string; stderr: string }> =>
     new Promise((resolve, reject) => {
+        if (!isAllowedCommand(cmd)) {
+            reject(new Error(`Blocked spawn of '${basename(cmd)}'`));
+            return;
+        }
+
         const child = spawn(cmd, args, { ...opts, stdio: ['ignore', 'pipe', 'pipe'] });
+
         let stdout = '';
         let stderr = '';
+
         child.stdout?.on('data', (chunk: Buffer | string) => {
             stdout += chunk.toString();
         });
+
         child.stderr?.on('data', (chunk: Buffer | string) => {
             stderr += chunk.toString();
         });
+
         child.on('error', reject);
         child.on('close', (code) => resolve({ code: code ?? 1, stdout, stderr }));
     });
