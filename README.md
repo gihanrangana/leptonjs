@@ -41,6 +41,32 @@ Currently supported:
 
 If you try LeptonJS, please open an issue with your feedback.
 
+## 🚧 Beta — Looking for Testers
+
+LeptonJS is currently in beta and I'm looking for developers to test it
+and report bugs, performance issues, and developer-experience problems.
+
+Currently supported:
+
+- Windows x64
+- WebView2 Evergreen
+- Node.js backend
+- React / Vite frontend
+
+### I especially want feedback about
+
+- Installation
+- Development experience
+- Build process
+- IPC API
+- Application startup
+- WebView behavior
+- Binary size
+- Memory usage
+- Bugs/crashes
+
+If you try LeptonJS, please open an issue with your feedback.
+
 ---
 
 
