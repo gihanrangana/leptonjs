@@ -1,6 +1,6 @@
 {
     "name": "@leptonjs/core",
-    "version": "0.1.0-beta.3",
+    "version": "0.1.0-beta.4",
     "description": "LeptonJS Node runtime (app, IPC, native loader).",
     "license": "MIT",
     "type": "commonjs",

@@ -7,7 +7,7 @@ Build native desktop apps with **Node.js** and **web technologies** — no bundl
 
 
 
-LeptonJS is an experiment: a Node.js backend behind the OS webview (`wry` / `tao`), with typed routes and events. It is not production-ready. `0.1.0-beta.3` runs on Windows x64 only, the API can still change, and there is no `leptonjs create` scaffold.
+LeptonJS is an experiment: a Node.js backend behind the OS webview (`wry` / `tao`), with typed routes and events. It is not production-ready. `0.1.0-beta.4` runs on Windows x64 only, the API can still change, and there is no `leptonjs create` scaffold.
 
 Try `[examples/react](examples/react/)`. Break it. Open an issue with what failed, including your Node version and the `--no-tui` log.
 
@@ -546,15 +546,15 @@ When you install from npm instead of this workspace:
 ```json
 {
     "dependencies": {
-        "@leptonjs/core": "0.1.0-beta.3",
-        "@leptonjs/client": "0.1.0-beta.3",
-        "@leptonjs/registry": "0.1.0-beta.3",
-        "@leptonjs/react": "0.1.0-beta.3",
+        "@leptonjs/core": "0.1.0-beta.4",
+        "@leptonjs/client": "0.1.0-beta.4",
+        "@leptonjs/registry": "0.1.0-beta.4",
+        "@leptonjs/react": "0.1.0-beta.4",
         "zod": "^4.4.3"
     },
     "devDependencies": {
-        "@leptonjs/cli": "0.1.0-beta.3",
-        "@leptonjs/vite": "0.1.0-beta.3"
+        "@leptonjs/cli": "0.1.0-beta.4",
+        "@leptonjs/vite": "0.1.0-beta.4"
     }
 }
 ```

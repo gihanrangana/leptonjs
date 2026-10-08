@@ -1,6 +1,6 @@
 {
     "name": "@leptonjs/cli",
-    "version": "0.1.0-beta.3",
+    "version": "0.1.0-beta.4",
     "description": "LeptonJS CLI (dev / build / start / pack).",
     "license": "MIT",
     "type": "module",
