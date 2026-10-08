@@ -105,6 +105,32 @@ export const leptonClientScript = `(function () {
       };
     }
 
-    window.__lepton = { invoke: invoke, listen: listen };
+    function subscribe(name, input, cb) {
+        var id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
+
+        fetch(base + '/__on', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-lepton-token': token },
+            body: JSON.stringify({ name: name, id: id, input: input })
+        });
+
+        function wrapped(data) {
+            if (!data || data.__sub !== id) return;
+            cb(data.payload);
+        }
+
+        var stop = listen(name, wrapped);
+
+        return function unsubscribe() {
+            stop();
+            fetch(base + '/__off', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-lepton-token': token },
+            body: JSON.stringify({ id: id })
+            });
+        };
+    }
+
+    window.__lepton = { invoke: invoke, listen: listen, subscribe: subscribe };
   })();
 `;

@@ -1,6 +1,6 @@
 {
     "name": "@leptonjs/vite",
-    "version": "0.1.0-beta.3",
+    "version": "0.1.0-beta.4",
     "description": "Vite plugin for LeptonJS desktop apps.",
     "license": "MIT",
     "type": "module",
@@ -35,7 +35,7 @@
     },
     "devDependencies": {
         "@types/node": "^22.20.1",
-        "typescript": "~5.9.3",
+        "typescript": "~6.0.3",
         "vite": "^8.2.2"
     },
     "publishConfig": {

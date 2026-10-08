@@ -1,6 +1,6 @@
 # @leptonjs/registry
 
-Shared route and event definitions for LeptonJS. This package is the **single source of truth** for your app's IPC contract — import it from both your backend (`@leptonjs/core`) and your frontend (`@leptonjs/client`, `@leptonjs/react`) so types and runtime validation stay in sync.
+Zod route and event definitions for LeptonJS. Backend code imports these builders. The frontend does not need to import the resulting objects at runtime. It merges their types into `@leptonjs/client`.
 
 ## Installation
 
@@ -8,135 +8,86 @@ Shared route and event definitions for LeptonJS. This package is the **single so
 npm install @leptonjs/registry zod
 ```
 
-> `zod` is a required peer — every route and event schema is a Zod type.
+## Routes
 
-## Core Concepts
-
-### Routes (Request / Response)
-
-A **route** models a typed RPC call from the renderer to the Node.js backend. Each route has:
-
-| Field | Description |
-|---|---|
-| `name` | Wire name (string sent over IPC) |
-| `inputSchema` | Zod schema that validates the request payload |
-| `outputSchema` | Zod schema that describes the response type |
+`defineRoute(inputSchema, outputSchema, handler)` creates a leaf. The name is empty until `defineApi` from `@leptonjs/core` walks the tree and sets `greeting.getGreeting`.
 
 ```ts
-import { route, defineRoutes } from '@leptonjs/registry';
-import { z } from 'zod';
+import { defineApi } from '@leptonjs/core';
+import { defineRoute } from '@leptonjs/registry';
+import z from 'zod';
 
-// Define a single route
-const getGreeting = route('getGreeting', z.string(), z.string());
+export const getGreeting = defineRoute(
+    z.string(),
+    z.string(),
+    async (name) => `Hello, ${name}!`,
+);
 
-// Group routes into a map
-export const routes = defineRoutes({
-  getGreeting,
-  getUser: route('getUser', z.object({ id: z.number() }), z.object({
-    name: z.string(),
-    email: z.string(),
-  })),
-});
+export const greeting = defineApi({ getGreeting });
 ```
 
-### Events (Server → Client push)
+| Field | Role |
+| --- | --- |
+| `name` | Wire name. Assigned by `defineApi` |
+| `inputSchema` | Zod schema for the request |
+| `outputSchema` | Zod schema for the response |
+| `handler` | `(input) => output \| Promise<output>` |
 
-An **event** models a typed push from the backend to all connected renderers (delivered via SSE). Each event has:
+`route(name, inputSchema, outputSchema?)` and `defineRoutes` are the older flat helpers. New apps should use `defineRoute` plus `defineApi`. `outputSchema` on `route` defaults to `z.unknown()`.
 
-| Field | Description |
-|---|---|
-| `name` | Wire name (string sent over SSE) |
-| `payloadSchema` | Zod schema that validates the payload |
+`findRoute(routes, name)` returns the route with that wire name, or `undefined`.
+
+## Events
+
+`defineEvents` walks the tree and sets each dotted `name`.
+
+### Push
+
+One schema. The page does not send input. The backend calls `ipcMain.emit`.
 
 ```ts
-import { event, defineEvents } from '@leptonjs/registry';
-import { z } from 'zod';
+import { defineEvent, defineEvents } from '@leptonjs/registry';
+import z from 'zod';
 
 export const events = defineEvents({
-  tick:       event('tick', z.number()),
-  userJoined: event('userJoined', z.object({ name: z.string() })),
+    clock: {
+        tick: defineEvent(z.number()),
+    },
 });
 ```
 
-## API Reference
+Wire name: `clock.tick`.
 
-### `route<I, O>(name, inputSchema, outputSchema?)`
+### Input
 
-Create a typed route definition.
-
-| Param | Type | Description |
-|---|---|---|
-| `name` | `string` | Unique wire name |
-| `inputSchema` | `ZodType<I>` | Validates the caller's input |
-| `outputSchema` | `ZodType<O>` | *(optional)* Describes the return type — defaults to `z.unknown()` |
-
-**Returns:** `Route<I, O>`
-
-### `defineRoutes<R>(routes)`
-
-Identity helper that narrows the type of a route map. Pass your routes object and get full type inference back.
+Input schema, payload schema, then `(input, emit) => void | (() => void)`.
 
 ```ts
-const routes = defineRoutes({ getGreeting, getUser });
-// typeof routes is { getGreeting: Route<string, string>; getUser: Route<...>; }
+export const events = defineEvents({
+    echo: {
+        shout: defineEvent(z.string(), z.string(), (text, emit) => {
+            emit(text.toUpperCase());
+        }),
+    },
+});
 ```
 
-### `findRoute<R>(routes, name)`
+Wire name: `echo.shout`. The page calls `ipc.on('echo.shout', text, cb)`. Return a function from the handler when the subscription should dispose a timer or similar. `emit` checks the payload with `payloadSchema` before it is written to SSE.
 
-Look up a route by its wire `name` at runtime. Returns `undefined` if not found.
+`event(name, payloadSchema)` is the older flat push helper. New apps should use `defineEvent` plus `defineEvents`.
 
-```ts
-const match = findRoute(routes, 'getGreeting'); // Route<string, string> | undefined
-```
+`findEvent(events, name)` looks up a wire name.
 
-### `event<P>(name, payloadSchema)`
+## Types
 
-Create a typed event definition.
-
-| Param | Type | Description |
-|---|---|---|
-| `name` | `string` | Unique wire name |
-| `payloadSchema` | `ZodType<P>` | Validates the event payload |
-
-**Returns:** `TypedEvent<P>`
-
-### `defineEvents<E>(events)`
-
-Identity helper that narrows the type of an event map — same idea as `defineRoutes`.
-
-### `findEvent<E>(events, name)`
-
-Look up an event by its wire `name` at runtime.
-
-## Type Exports
-
-| Type | Description |
-|---|---|
-| `Route<I, O>` | A single typed IPC route |
-| `RouteMap` | `Record<string, Route<unknown, unknown>>` |
-| `RouteInput<R>` | Extract the input type from a route |
-| `RouteOutput<R>` | Extract the output type from a route |
-| `Handler<R>` | Backend handler signature: `(input: I) => O \| Promise<O>` |
-| `TypedEvent<P>` | A single typed event |
-| `EventMap` | `Record<string, TypedEvent<unknown>>` |
-| `EventPayload<E>` | Extract the payload type from an event |
-| `Emitter<E>` | `(payload: P) => void` |
-
-## Recommended Project Structure
-
-Place your routes and events in a `shared/` directory so both backend and frontend can import them:
-
-```
-src/
-├── shared/
-│   ├── routes.ts    ← defineRoutes(...)
-│   ├── events.ts    ← defineEvents(...)
-│   └── types.ts     ← plain DTOs (no zod, no Node/DOM APIs)
-├── backend/
-│   └── ...
-└── frontend/
-    └── ...
-```
+| Type | Meaning |
+| --- | --- |
+| `Route<I, O>` | Named route schemas, no handler |
+| `DefinedRoute<I, O>` | Route plus `handler` |
+| `RouteInput<R>` / `RouteOutput<R>` | Extracted input and output |
+| `TypedEvent<P, I>` | Payload `P`. Input `I` defaults to `void` for a push event |
+| `EventHandler<I, P>` | `(input, emit) => void \| (() => void)` |
+| `FlattenRoutes<T>` / `FlattenEvents<T>` | Dotted maps used by the client |
 
 ## License
 

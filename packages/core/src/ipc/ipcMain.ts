@@ -35,5 +35,14 @@ export const createIpcMain = <R extends RouteMap>(server: IpcServer<R>): IpcMain
             }
             server.emit(event.name, validated);
         },
+        onEvent: (name, event) => {
+            server.onEvent(name, event);
+        },
+        offEvent: (id) => {
+            server.offEvent(id);
+        },
+        clearEvents: () => {
+            server.clearEvents();
+        },
     };
 };

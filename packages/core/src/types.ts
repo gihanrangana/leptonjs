@@ -89,6 +89,8 @@ export interface DevOptions<R extends RouteMap>
  * Start options.
  *
  * @param routes - The routes to use.
+ * @param api - The API to use.
+ * @param events - The events to use.
  * @param title - The title of the window.
  * @param splash - The options for displaying a splash screen.
  * @param setup - The function to call when the IPC main is ready.
@@ -98,7 +100,12 @@ export interface DevOptions<R extends RouteMap>
  */
 
 export interface StartOptions<R extends RouteMap> {
-    readonly routes: R;
+    readonly routes?: R;
+    readonly api?: {
+        readonly routes: R;
+        register: (ipcMain: IpcMain<R>) => void;
+    };
+    readonly events?: Record<string, unknown>;
     readonly title: string;
     readonly splash?: SplashOptions;
     readonly setup: (ipcMain: IpcMain<R>) => undefined | (() => void);

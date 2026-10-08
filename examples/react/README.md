@@ -1,32 +1,56 @@
-# React + TypeScript + Vite
+# LeptonJS React example
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A desktop window with three IPC calls:
 
-Currently, two official plugins are available:
+- `greeting.getGreeting` asks the backend for `Hello, <name>!`.
+- `clock.tick` is a push event. The number on the page updates every second.
+- `echo.shout` sends a string and shows the uppercase result.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Run from this repo
 
-## React Compiler
+Install and build the workspace from the repository root first (`pnpm install` and `pnpm build`). Then:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+pnpm leptonjs -- dev react
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+That starts Vite, the Node backend, and a WebView2 window. Node must be 22.23 or newer, on Windows x64, with the WebView2 Evergreen runtime installed.
+
+Other commands, from the repository root:
+
+```bash
+pnpm leptonjs -- build react --no-tui
+pnpm leptonjs -- start react --no-tui
+pnpm leptonjs -- pack react --no-tui --no-installer
+```
+
+`npm run dev` inside this folder starts Vite alone. It does not open the native window. Use `leptonjs dev`.
+
+## Layout
+
+```
+declarations.d.ts                 types for ipc (import type only)
+src/backend/main.ts                app.start({ api, events, setup })
+src/backend/app.ts                 clock setup; re-exports api and events
+src/backend/api.ts                 defineApi({ greeting })
+src/backend/events.ts              clock.tick and echo.shout
+src/backend/handlers/greeting.ts   defineRoute handler
+src/backend/handlers/clock.ts      emits clock.tick
+src/frontend/App.tsx               invoke, useEvent, ipc.on
+```
+
+`declarations.d.ts` is included by `tsconfig.app.json`. That is what makes `ipc.invoke` and `ipc.on` suggest real names.
+
+`src/backend/app.ts` is the file dev reload imports. It re-exports `api` and `events`, so a saved route or event handler replaces the one from process start.
+
+## What the page does
+
+`useEvent('clock.tick', 0)` stores the latest tick. The `0` is only the first paint.
+
+`ipc.on('clock.tick', ...)` listens to the same stream and stores it as "Heard". The effect returns the unsubscribe function.
+
+Greet calls `ipc.invoke('greeting.getGreeting', name)`.
+
+Shout calls `ipc.on('echo.shout', text, ...)`, then unsubscribes after the first result.
+
+Restart `leptonjs dev` after rebuilding `@leptonjs/core` or `@leptonjs/client`. The preload script is injected when the window opens.

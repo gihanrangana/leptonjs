@@ -1,6 +1,6 @@
 {
     "name": "@leptonjs/registry",
-    "version": "0.1.0-beta.3",
+    "version": "0.1.0-beta.4",
     "description": "Shared route/event helpers and types for LeptonJS.",
     "license": "MIT",
     "type": "commonjs",
@@ -34,7 +34,7 @@
     },
     "devDependencies": {
         "@types/node": "^22.20.1",
-        "typescript": "~5.9.3"
+        "typescript": "~6.0.3"
     },
     "publishConfig": {
         "access": "public",

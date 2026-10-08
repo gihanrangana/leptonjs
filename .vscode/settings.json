@@ -1,4 +1,5 @@
 {
+    "json.schemaDownload.enable": true,
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "biomejs.biome",
     "editor.codeActionsOnSave": {
@@ -16,5 +17,10 @@
     },
     "[jsonc]": {
         "editor.defaultFormatter": "biomejs.biome"
-    }
+    },
+    "files.exclude": { "**/dist": true },
+    "js/ts.tsserver.watchOptions": {
+        "excludeDirectories": ["**/dist", "**/node_modules", "**/target"]
+    },
+    "js/ts.tsdk.path": "node_modules\\typescript\\lib"
 }

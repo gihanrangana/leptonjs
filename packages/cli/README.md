@@ -26,7 +26,7 @@ What happens:
 1. Starts the Vite dev server (frontend HMR).
 2. Spawns the Node.js backend via `tsx` with file watching.
 3. Opens the native WebView window pointing at `http://127.0.0.1:<port>`.
-4. Backend `setup()` function is re-executed on file changes without restarting the process.
+4. On a watched file change, the backend reloads `app.ts` beside the entry file, re-registers exported `api` and `events`, and runs `setup()` again. Restart the command after you rebuild a `@leptonjs/*` package.
 
 ### `leptonjs build [target]`
 
@@ -88,7 +88,7 @@ The CLI looks for configuration in two places (first wins):
 {
   "frontend": ".",
   "backend": "src/backend/main.ts",
-  "watch": ["src/backend", "src/shared"],
+  "watch": ["src/backend"],
   "port": 5173,
   "backendTsconfig": "tsconfig.backend.json"
 }
@@ -102,7 +102,7 @@ The CLI looks for configuration in two places (first wins):
   "lepton": {
     "frontend": ".",
     "backend": "src/backend/main.ts",
-    "watch": ["src/backend", "src/shared"],
+    "watch": ["src/backend"],
     "port": 5173,
     "backendTsconfig": "tsconfig.backend.json"
   }

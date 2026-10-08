@@ -1,14 +1,10 @@
-import type { IpcMain } from '@leptonjs/core';
-import { events } from '@shared/events';
-import { routes } from '@shared/routes';
+import type { IpcMain, RouteMap } from '@leptonjs/core';
 import { startClock } from './handlers/clock';
-import { registerGreeting } from './handlers/greeting';
 
-export { events, routes };
+export { api } from './api';
+export { events } from './events';
 
-export const setup = (ipcMain: IpcMain<typeof routes>): (() => void) => {
-    registerGreeting(ipcMain);
-
+export const setup = (ipcMain: IpcMain<RouteMap>): (() => void) => {
     const stopClock = startClock(ipcMain);
 
     return () => {

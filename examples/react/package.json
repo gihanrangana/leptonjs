@@ -27,15 +27,14 @@
         "@leptonjs/vite": "workspace:*",
         "oxlint": "^1.79.0",
         "tsx": "4.23.12",
-        "typescript": "~6.0.2",
+        "typescript": "~6.0.3",
         "vite": "^8.2.2"
     },
     "lepton": {
         "frontend": ".",
         "backend": "src/backend/main.ts",
         "watch": [
-            "src/backend",
-            "src/shared"
+            "src/backend"
         ],
         "port": 5173,
         "backendTsconfig": "tsconfig.backend.json"

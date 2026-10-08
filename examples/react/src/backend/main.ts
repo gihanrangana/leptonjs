@@ -1,8 +1,11 @@
 import { app } from '@leptonjs/core';
-import { routes, setup } from './app';
+import { api } from './api';
+import { setup } from './app';
+import { events } from './events';
 
 void app.start({
-    routes,
+    api,
+    events,
     title: 'LeptonJS Desktop - React',
     splash: {
         image: 'src/assets/hero.png',
