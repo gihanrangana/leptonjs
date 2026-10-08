@@ -23,6 +23,32 @@ LeptonJS pairs a full Node.js backend with the OS-native WebView (`wry` / `tao`)
 
 > **Status:** `0.1.0-beta.3` — Windows x64 only. API may change. WebView2 Evergreen is required.
 
+## 🚧 Beta — Looking for Testers
+
+LeptonJS is currently in beta and I'm looking for developers to test it
+and report bugs, performance issues, and developer-experience problems.
+
+Currently supported:
+
+- Windows x64
+- WebView2 Evergreen
+- Node.js backend
+- React / Vite frontend
+
+### I especially want feedback about
+
+- Installation
+- Development experience
+- Build process
+- IPC API
+- Application startup
+- WebView behavior
+- Binary size
+- Memory usage
+- Bugs/crashes
+
+If you try LeptonJS, please open an issue with your feedback.
+
 ---
 
 ## Why LeptonJS?
