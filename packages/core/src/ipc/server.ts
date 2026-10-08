@@ -239,7 +239,7 @@ export const createIpcServer = <R extends RouteMap>(
         }
 
         const stop = subscriptions.get(id);
-        if (stop) {
+        if (typeof stop === 'function') {
             subscriptions.delete(id);
             stop();
         }
