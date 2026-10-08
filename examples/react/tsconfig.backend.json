@@ -1,7 +1,11 @@
 {
     "compilerOptions": {
-        // "composite": true,
-        // "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.backend.tsbuildinfo",
+        "composite": true,
+        "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.backend.tsbuildinfo",
+        "declaration": true,
+        "emitDeclarationOnly": true,
+        "rootDir": "./src",
+        "outDir": "./node_modules/.tmp/backend",
         "skipLibCheck": true,
         "target": "ES2022",
         "lib": ["ES2023"],
@@ -9,12 +13,8 @@
         "moduleResolution": "bundler",
         "esModuleInterop": true,
         "strict": true,
-        "noEmit": true,
         "types": ["node"],
-        // "baseUrl": ".",
-        "paths": {
-            "@shared/*": ["./src/shared/*"]
-        }
+        "paths": {}
     },
-    "include": ["./src/backend", "./src/shared"]
+    "include": ["./src/backend"]
 }

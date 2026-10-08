@@ -1,6 +1,7 @@
-import type { IpcMain } from '@leptonjs/core';
-import { routes } from '@shared/routes';
+import { defineApi } from '@leptonjs/core';
+import { defineRoute } from '@leptonjs/registry';
+import z from 'zod';
 
-export const registerGreeting = (ipcMain: IpcMain<typeof routes>): void => {
-    ipcMain.handle(routes.getGreeting, async (name) => `Hello1, ${name}!`);
-};
+export const getGreeting = defineRoute(z.string(), z.string(), async (name) => `Hello, ${name}!`);
+
+export const greeting = defineApi({ getGreeting });

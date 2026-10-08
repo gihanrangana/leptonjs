@@ -1,6 +1,6 @@
 # @leptonjs/vite
 
-Vite plugin for LeptonJS desktop apps. Automatically starts and manages the Node.js backend process alongside the Vite dev server, enabling hot-reload for both frontend and backend during development.
+Vite plugin for LeptonJS. It starts the Node backend next to the Vite dev server and reloads that backend when watched files change.
 
 ## Installation
 
@@ -8,17 +8,10 @@ Vite plugin for LeptonJS desktop apps. Automatically starts and manages the Node
 npm install -D @leptonjs/vite
 ```
 
-### Peer Dependencies
-
-| Package | Version |
-|---|---|
-| `vite` | `≥ 6` |
-| `tsx` | `≥ 4` |
+Peers: `vite` ≥ 6 and `tsx` ≥ 4.
 
 ## Setup
 
-Add `leptonjs()` to your Vite config:
-
 ```ts
 // vite.config.ts
 import { leptonjs } from '@leptonjs/vite';
@@ -26,90 +19,61 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [
-    react(),
-    leptonjs({
-      backendEntry: './src/backend/main.ts',
-      watch: ['./src/backend', './src/shared'],
-    }),
-  ],
+    plugins: [
+        react(),
+        leptonjs({
+            backendEntry: './src/backend/main.ts',
+            watch: ['./src/backend'],
+        }),
+    ],
 });
 ```
 
-## Plugin Options
+Watch the backend tree. Routes and events live there, so a separate `src/shared` directory is not required.
 
-### `LeptonPluginOptions`
+## Options
 
-| Option | Type | Required | Description |
-|---|---|---|---|
-| `backendEntry` | `string` | ✅ | Path to the backend entry file (e.g. `./src/backend/main.ts`) |
-| `watch` | `string[]` | — | Directories to watch for backend HMR. When a `.ts`/`.js` file changes in these dirs, the backend `setup()` function is re-executed without restarting the process. |
-| `setupModule` | `string` | — | Explicit path to the setup module. Defaults to `app.ts` next to `backendEntry`. |
-| `env` | `Record<string, string>` | — | Extra environment variables passed to the backend process. |
+| Option | Required | Description |
+| --- | --- | --- |
+| `backendEntry` | yes | Backend entry, usually `./src/backend/main.ts` |
+| `watch` | no | Directories whose `.ts` / `.js` changes re-run setup without killing the process |
+| `setupModule` | no | Setup module. Default is `app.ts` next to `backendEntry` |
+| `env` | no | Extra environment variables for the backend process |
 
-## What the Plugin Does
+## What it does
 
-1. **Binds to `127.0.0.1`** — Forces the Vite dev server host to `127.0.0.1` (required for WebView2 CORS to work). Warns and overrides if set differently.
+1. Pins the Vite host to `127.0.0.1` so WebView2 CORS matches the IPC server.
+2. Pre-bundles `@leptonjs/registry`, `@leptonjs/client`, and `@leptonjs/react`.
+3. Spawns `backendEntry` with `tsx` once Vite is listening.
 
-2. **Pre-bundles LeptonJS packages** — Adds `@leptonjs/registry`, `@leptonjs/client`, and `@leptonjs/react` to Vite's `optimizeDeps.include` for faster dev startup.
+| Variable | Value |
+| --- | --- |
+| `LEPTON_DEV` | `'1'` |
+| `LEPTON_DEV_URL` | `http://127.0.0.1:<port>` |
+| `LEPTON_DEV_ORIGIN` | Same origin, used for CORS |
+| `LEPTON_WATCH_DIRS` | Absolute watch paths, comma-separated |
+| `LEPTON_SETUP_MODULE` | Resolved `app.ts`, or `setupModule` |
 
-3. **Spawns the backend** — When the Vite HTTP server starts listening, the plugin spawns a child process running your `backendEntry` via `tsx`. The backend receives these environment variables:
+4. Restarts the backend up to 5 times if it exits with a non-zero code.
+5. Forwards stdout and stderr into the CLI TUI when `LEPTON_TUI=1`.
+6. Stops the backend when Vite closes.
 
-   | Variable | Value |
-   |---|---|
-   | `LEPTON_DEV` | `'1'` |
-   | `LEPTON_DEV_URL` | `http://127.0.0.1:<port>` |
-   | `LEPTON_DEV_ORIGIN` | Same as above (for CORS) |
-   | `LEPTON_WATCH_DIRS` | Comma-separated absolute paths from `watch` |
-   | `LEPTON_SETUP_MODULE` | Resolved path to the setup module |
+`app.ts` must re-export `api` and `events`. The reloader imports that module, then registers whatever it exports. See the [core README](../core/README.md).
 
-4. **Auto-restarts on crash** — If the backend process exits with a non-zero code, the plugin restarts it (up to 5 times) with a 300ms debounce.
-
-5. **Forwards logs** — When running in TUI mode (`LEPTON_TUI=1`), backend stdout/stderr are forwarded as structured messages to the CLI's terminal UI.
-
-6. **Clean shutdown** — When the Vite server closes or the process exits, the backend is killed gracefully.
-
-## Full Example
+## Layout
 
 ```
 my-app/
+├── declarations.d.ts
 ├── src/
 │   ├── backend/
-│   │   ├── main.ts         ← backendEntry
-│   │   └── app.ts          ← setup module (auto-detected)
-│   ├── shared/
-│   │   ├── routes.ts
+│   │   ├── main.ts
+│   │   ├── app.ts
+│   │   ├── api.ts
 │   │   └── events.ts
 │   └── frontend/
-│       ├── main.tsx
 │       └── App.tsx
-├── vite.config.ts
-└── package.json
-```
-
-```ts
-// vite.config.ts
-import path from 'node:path';
-import { leptonjs } from '@leptonjs/vite';
-import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
-
-export default defineConfig({
-  plugins: [
-    react(),
-    leptonjs({
-      backendEntry: './src/backend/main.ts',
-      watch: ['./src/backend', './src/shared'],
-    }),
-  ],
-  resolve: {
-    alias: {
-      '@shared': path.resolve(__dirname, 'src/shared'),
-      '@': path.resolve(__dirname, 'src/frontend'),
-    },
-  },
-  server: { host: '127.0.0.1' },
-});
+└── vite.config.ts
 ```
 
 ## License

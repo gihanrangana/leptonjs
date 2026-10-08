@@ -1,8 +1,15 @@
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
+import type { RouteMap } from '../ipc/types';
 
 export type SetupModule = {
     setup: (ipc: unknown) => (() => void) | undefined;
+    /** Present when the setup module exports `defineApi` (`api`). */
+    api?: {
+        readonly routes: RouteMap;
+        register: (ipc: unknown) => void;
+    };
+    events?: Record<string, unknown>;
 };
 
 export const esmImport = new Function('specifier', 'return import(specifier)') as (

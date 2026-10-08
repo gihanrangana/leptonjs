@@ -12,12 +12,11 @@ export default defineConfig({
         react(),
         leptonjs({
             backendEntry: './src/backend/main.ts',
-            watch: ['./src/backend', './src/shared'],
+            watch: ['./src/backend'],
         }),
     ],
     resolve: {
         alias: {
-            '@shared': path.join(root, 'src/shared'),
             '@': path.join(root, 'src/frontend'),
         },
     },

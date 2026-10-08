@@ -2,7 +2,7 @@
  * LeptonJS Desktop — IPC transport types (HTTP / SSE).
  * Shared route/event types live in `@leptonjs/registry`.
  */
-import type { EventPayload, Handler, RouteMap, TypedEvent } from '@leptonjs/registry';
+import type { DefinedRoute, EventPayload, Handler, RouteMap, TypedEvent } from '@leptonjs/registry';
 
 export type {
     EventMap,
@@ -57,6 +57,9 @@ export interface IpcServer<R extends RouteMap> {
     handle<K extends keyof R & string>(route: R[K], handler: Handler<R[K]>): void;
     clearHandlers(): void;
     emit(name: string, data: unknown): void;
+    onEvent(name: string, event: TypedEvent<unknown, unknown>): void;
+    offEvent(id: string): void;
+    clearEvents(): void;
 }
 
 export interface IpcServerOptions {
@@ -74,4 +77,14 @@ export interface IpcMain<R extends RouteMap> {
     handle<K extends keyof R & string>(route: R[K], handler: Handler<R[K]>): void;
     clearHandlers(): void;
     emit<E extends TypedEvent<unknown>>(event: E, payload: EventPayload<E>): void;
+    onEvent(name: string, event: TypedEvent<unknown, unknown>): void;
+    offEvent(id: string): void;
+    clearEvents(): void;
 }
+
+export type ApiLeaf = DefinedRoute<unknown, unknown>;
+
+export type ApiDef<R = RouteMap> = {
+    readonly routes: R;
+    readonly register: (ipcMain: IpcMain<RouteMap>) => void;
+};

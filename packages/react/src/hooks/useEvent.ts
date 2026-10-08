@@ -1,16 +1,17 @@
-import { listen } from '@leptonjs/client';
-import type { EventPayload, TypedEvent } from '@leptonjs/registry';
+import type { EventData, EventName, RegisteredEvents } from '@leptonjs/client';
 import { useEffect, useState } from 'react';
 
-/**
- * Subscribe to a typed LeptonJS SSE event.
- * Returns the latest payload and unsubscribes on unmount / event change.
- */
-export const useEvent = <E extends TypedEvent<unknown>>(event: E, initial: EventPayload<E>) => {
-    const [value, setValue] = useState<EventPayload<E>>(initial);
+export const useEvent = <K extends EventName<RegisteredEvents>>(
+    name: K,
+    initial?: EventData<RegisteredEvents, K>,
+): EventData<RegisteredEvents, K> => {
+    const [value, setValue] = useState<EventData<RegisteredEvents, K>>(initial);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed by name, not object ref
-    useEffect(() => listen(event, setValue), [event.name]);
+    useEffect(() => {
+        return window.__lepton.listen(name, (payload) => {
+            setValue(payload as EventData<RegisteredEvents, K>);
+        });
+    }, [name]);
 
     return value;
 };

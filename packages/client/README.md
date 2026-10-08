@@ -1,6 +1,6 @@
 # @leptonjs/client
 
-The renderer-side (frontend) IPC client for LeptonJS. Provides two functions — `invoke` and `listen` — that let your frontend code call backend routes and subscribe to server-pushed events with **full type safety**.
+Frontend IPC client for LeptonJS. Import the `ipc` singleton, then call routes and events by dotted name. Types come from a `declare module '@leptonjs/client'` merge, not from importing backend handlers into the webview bundle.
 
 ## Installation
 
@@ -8,96 +8,69 @@ The renderer-side (frontend) IPC client for LeptonJS. Provides two functions —
 npm install @leptonjs/client
 ```
 
-> This package is designed to run **inside the WebView** renderer (browser context). It communicates with the Node.js backend through the `window.__lepton` bridge that LeptonJS injects automatically.
+This runs in the WebView. `window.__lepton` is injected before your page script and talks to the Node IPC server.
 
-## API Reference
-
-### `invoke<I, O>(route, input): Promise<O>`
-
-Call a backend route and await the typed response.
+## Type the client
 
 ```ts
-import { invoke } from '@leptonjs/client';
-import { routes } from '../shared/routes';
+// declarations.d.ts
+import type { api } from './src/backend/api';
+import type { events } from './src/backend/events';
 
-const greeting = await invoke(routes.getGreeting, 'World');
-// greeting is typed as string
-```
-
-| Param | Type | Description |
-|---|---|---|
-| `route` | `Route<I, O>` | A route definition from `@leptonjs/registry` |
-| `input` | `I` | The input payload — type-checked against the route's `inputSchema` |
-
-**Returns:** `Promise<O>` — the backend handler's return value.
-
-**Under the hood:** `invoke` sends a JSON-RPC request via the injected `window.__lepton.invoke()` bridge, which POSTs to the IPC server's `/__ipc` endpoint with a correlation ID. The response is matched and returned.
-
-### `listen<E>(event, callback): () => void`
-
-Subscribe to a typed server-sent event. Returns an unsubscribe function.
-
-```ts
-import { listen } from '@leptonjs/client';
-import { events } from '../shared/events';
-
-const unsubscribe = listen(events.tick, (count) => {
-  console.log('Tick:', count); // count is typed as number
-});
-
-// Later, to stop listening:
-unsubscribe();
-```
-
-| Param | Type | Description |
-|---|---|---|
-| `event` | `TypedEvent<P>` | An event definition from `@leptonjs/registry` |
-| `callback` | `(payload: P) => void` | Called each time the backend emits this event |
-
-**Returns:** `() => void` — call this function to unsubscribe.
-
-**Under the hood:** `listen` opens an SSE connection via `window.__lepton.listen()` and filters incoming events by name.
-
-## Usage with React
-
-For React apps, prefer the `useEvent` hook from [`@leptonjs/react`](../react/) — it wraps `listen` with proper `useEffect` lifecycle management:
-
-```tsx
-import { useEvent } from '@leptonjs/react';
-import { events } from '../shared/events';
-
-function Clock() {
-  const tick = useEvent(events.tick, 0);
-  return <p>Tick: {tick}</p>;
+declare module '@leptonjs/client' {
+    interface LeptonApp {
+        api: typeof api;
+        events: typeof events;
+    }
 }
 ```
 
-## Usage without React
+Include that file in the frontend `tsconfig`. `import type` keeps the backend module out of the bundle.
 
-`@leptonjs/client` is framework-agnostic. You can use `invoke` and `listen` with any frontend framework or vanilla JS:
+`LeptonApp` is an interface on this package. A type alias in your app will not merge.
+
+## `ipc`
 
 ```ts
-// Vanilla JS
-import { invoke, listen } from '@leptonjs/client';
-import { routes } from './shared/routes';
-import { events } from './shared/events';
+import { ipc } from '@leptonjs/client';
 
-document.getElementById('greet-btn')?.addEventListener('click', async () => {
-  const name = document.getElementById('name-input') as HTMLInputElement;
-  const result = await invoke(routes.getGreeting, name.value);
-  document.getElementById('output')!.textContent = result;
+const greeting = await ipc.invoke('greeting.getGreeting', 'World');
+const same = await ipc.greeting.getGreeting('World');
+
+const stopTick = ipc.on('clock.tick', (n) => {
+    console.log(n);
 });
 
-listen(events.tick, (count) => {
-  document.getElementById('tick')!.textContent = `Tick: ${count}`;
+const stopShout = ipc.on('echo.shout', 'hello', (result) => {
+    console.log(result);
+    stopShout();
 });
 ```
 
-## Type Exports
+| Call | When |
+| --- | --- |
+| `ipc.invoke(name, input)` | Request/response route. Returns `Promise` of the handler result |
+| `ipc.<group>.<method>(input)` | Same route call, nested |
+| `ipc.on(name, cb)` | Push event (`defineEvent` with only a payload schema). Returns unsubscribe |
+| `ipc.on(name, input, cb)` | Input event. Sends `input`, then calls `cb` with each pushed payload |
 
-| Type | Description |
-|---|---|
-| `LeptonClient` | The shape of the `window.__lepton` bridge object |
+`clock.tick` has no input, so a second argument other than the callback is a type error. `echo.shout` requires the string, then the callback.
+
+`on` returns `() => void`. Call it to remove the listener. For an input event it also posts `/__off`.
+
+## Lower-level helpers
+
+`invoke(route, input)` and `listen(event, cb)` take registry objects instead of strings. Prefer `ipc` in app code so the page depends on names from `LeptonApp`.
+
+`createClient()` builds another client with the same shape. The exported `ipc` is that client, already typed by `LeptonApp`.
+
+## React
+
+Use `useEvent` from `@leptonjs/react` for push events that should become state. It does not send a payload. Input events stay on `ipc.on`.
+
+## Bridge
+
+`window.__lepton` is not part of the app-facing API. It exposes `invoke`, `listen`, and `subscribe` for the preload script.
 
 ## License
 

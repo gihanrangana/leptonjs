@@ -32,10 +32,12 @@ import { defineEvents, defineRoutes, event, findEvent, findRoute, route } from '
 import { importSetupFresh } from './helpers';
 import { DEFAULT_MAIN_WINDOW } from './helpers/constants';
 import { openMainAndOptionalSplash, resolveSplash } from './helpers/splash';
+import { bindEvents } from './ipc/bind-events';
 import { createIpcMain } from './ipc/ipcMain';
 import { buildPreloadScript } from './ipc/preload';
 import { createIpcServer } from './ipc/server';
 import type {
+    ApiDef,
     EventPayload,
     Handler,
     IpcMain,
@@ -347,7 +349,9 @@ export const app = {
     },
     start: async <R extends RouteMap>(options: StartOptions<R>): Promise<IpcMain<R>> => {
         const {
-            routes,
+            routes: routesOpt,
+            api,
+            events,
             title,
             splash,
             setup,
@@ -355,6 +359,10 @@ export const app = {
             assetDir: assetDirOpt,
             onWindowEvent,
         } = options;
+
+        const routes = api?.routes ?? routesOpt;
+
+        if (!routes) throw new Error('app.start: `routes` or `api` is required.');
 
         const devUrl = process.env.LEPTON_DEV_URL;
         const corsOrigin = process.env.LEPTON_DEV_ORIGIN;
@@ -389,8 +397,20 @@ export const app = {
 
             const ipcMain = createIpcMain<R>(server);
             let dispose: (() => void) | undefined;
+            const routeTable = routes as RouteMap;
+
+            // The IPC server closes over this object. Swap its contents so new
+            // routes and schemas are visible without recreating the server.
+            const replaceRoutes = (next: RouteMap): void => {
+                if (next === routeTable) return;
+                const snapshot = { ...next };
+                for (const key of Object.keys(routeTable)) delete routeTable[key];
+                Object.assign(routeTable, snapshot);
+            };
 
             const runSetup = async (): Promise<void> => {
+                const backend = setupModule ? await importSetupFresh(setupModule, watchDirs) : null;
+
                 try {
                     if (typeof dispose === 'function') dispose();
                 } catch (e) {
@@ -401,12 +421,22 @@ export const app = {
                 }
 
                 ipcMain.clearHandlers();
+                ipcMain.clearEvents();
 
-                if (setupModule) {
-                    const backend = await importSetupFresh(setupModule, watchDirs);
-                    dispose = (backend.setup as (ipc: IpcMain<R>) => (() => void) | undefined)(
-                        ipcMain,
-                    );
+                const nextApi = backend?.api ?? api;
+                if (nextApi) {
+                    replaceRoutes(nextApi.routes);
+                    nextApi.register(ipcMain);
+                }
+
+                const nextEvents = backend?.events ?? events;
+                if (nextEvents) bindEvents(ipcMain, nextEvents);
+
+                if (backend) {
+                    dispose =
+                        (backend.setup as (ipc: IpcMain<R>) => (() => void) | undefined)?.(
+                            ipcMain,
+                        ) ?? undefined;
                 } else {
                     dispose = setup(ipcMain) ?? undefined;
                 }
@@ -517,7 +547,9 @@ export const app = {
         runningServer = server;
 
         const ipcMain = createIpcMain(server);
-        setup(ipcMain);
+        api?.register(ipcMain);
+        if (events) bindEvents(ipcMain, events);
+        setup?.(ipcMain);
 
         const preload = buildPreloadScript(server.baseUrl, server.token);
 
@@ -572,7 +604,10 @@ export const app = {
     },
 };
 
+export { bindEvents } from './ipc/bind-events';
+export { defineApi } from './ipc/define-api';
 export type {
+    ApiDef,
     AppEvent,
     CreateWindowOptions,
     DevOptions,

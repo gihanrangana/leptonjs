@@ -1,6 +1,6 @@
 # @leptonjs/react
 
-React hooks for LeptonJS. Subscribe to server-pushed events inside React components with a single line of code.
+React hook for LeptonJS push events.
 
 ## Installation
 
@@ -8,102 +8,57 @@ React hooks for LeptonJS. Subscribe to server-pushed events inside React compone
 npm install @leptonjs/react
 ```
 
-### Peer Dependencies
+Peers: `react` ≥ 18, and the same version of `@leptonjs/client`. Event names are typed only after `declarations.d.ts` augments `@leptonjs/client`. See the [client README](../client/README.md).
 
-| Package | Version |
-|---|---|
-| `react` | `≥ 18` |
-| `@leptonjs/client` | same version |
-| `@leptonjs/registry` | same version |
+## `useEvent(name, initial)`
 
-## API Reference
-
-### `useEvent<E>(event, initialValue): P`
-
-Subscribe to a typed LeptonJS SSE event. Returns the **latest payload** and automatically unsubscribes on unmount or when the event reference changes.
+Subscribes to a push event and returns the latest payload. The hook unsubscribes on unmount and when `name` changes.
 
 ```tsx
 import { useEvent } from '@leptonjs/react';
-import { events } from '../shared/events';
 
 function Clock() {
-  const tick = useEvent(events.tick, 0);
-  return <p>Tick: {tick}</p>;
+    const tick = useEvent('clock.tick', 0);
+    return <p>Tick: {tick}</p>;
 }
 ```
 
-| Param | Type | Description |
-|---|---|---|
-| `event` | `TypedEvent<P>` | An event definition from `@leptonjs/registry` |
-| `initialValue` | `P` | The value returned before the first event arrives |
+| Argument | Meaning |
+| --- | --- |
+| `name` | Dotted event name, such as `'clock.tick'` |
+| `initial` | Value used until the first SSE message. It is not sent to the backend |
 
-**Returns:** `P` — the latest payload, re-renders the component on every new event.
-
-### How It Works
-
-`useEvent` is a thin wrapper around `@leptonjs/client`'s `listen` function:
-
-```ts
-const useEvent = <E extends TypedEvent<unknown>>(event: E, initial: EventPayload<E>) => {
-  const [value, setValue] = useState(initial);
-  useEffect(() => listen(event, setValue), [event]);
-  return value;
-};
-```
-
-- A `listen` subscription is opened on mount.
-- Each incoming event calls `setValue`, triggering a re-render.
-- The subscription is cleaned up on unmount (or when `event` changes).
-
-## Full Example
+This hook only listens. It cannot start an input event. For `echo.shout`, call `ipc.on(name, input, cb)` from `@leptonjs/client`.
 
 ```tsx
-// src/shared/events.ts
-import { defineEvents, event } from '@leptonjs/registry';
-import { z } from 'zod';
-
-export const events = defineEvents({
-  tick: event('tick', z.number()),
-  status: event('status', z.object({
-    online: z.boolean(),
-    latency: z.number(),
-  })),
-});
-
-// src/frontend/App.tsx
-import { invoke } from '@leptonjs/client';
+import { ipc } from '@leptonjs/client';
 import { useEvent } from '@leptonjs/react';
-import { events } from '../shared/events';
-import { routes } from '../shared/routes';
 import { useState } from 'react';
 
 function App() {
-  const tick = useEvent(events.tick, 0);
-  const status = useEvent(events.status, { online: false, latency: 0 });
+    const tick = useEvent('clock.tick', 0);
+    const [shout, setShout] = useState('');
 
-  const [name, setName] = useState('World');
-  const [greeting, setGreeting] = useState('');
+    const onShout = () => {
+        const stop = ipc.on('echo.shout', 'hello', (result) => {
+            setShout(result);
+            stop();
+        });
+    };
 
-  const onGreet = async () => {
-    setGreeting(await invoke(routes.getGreeting, name));
-  };
-
-  return (
-    <main>
-      <h1>LeptonJS + React</h1>
-      <p>Tick: {tick}</p>
-      <p>Status: {status.online ? '🟢 Online' : '🔴 Offline'} ({status.latency}ms)</p>
-      <input value={name} onChange={(e) => setName(e.target.value)} />
-      <button onClick={onGreet}>Greet</button>
-      <p>{greeting}</p>
-    </main>
-  );
+    return (
+        <main>
+            <p>Tick: {tick}</p>
+            <button type="button" onClick={onShout}>
+                Shout
+            </button>
+            <p>{shout}</p>
+        </main>
+    );
 }
 ```
 
-## Calling Routes
-
-For calling backend routes (`invoke`), import directly from `@leptonjs/client` — this package focuses solely on event subscriptions via hooks. See the [`@leptonjs/client` README](../client/) for `invoke` usage.
+Route calls also stay on `ipc` (`ipc.invoke` or the nested proxy). This package does not wrap those.
 
 ## License
 

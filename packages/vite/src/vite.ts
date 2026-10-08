@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import type { Plugin, ViteDevServer } from 'vite';
 
-import type { LeptonPluginOptions } from './types';
+import type { LeptonPluginOptions } from './types.js';
 
 const forwardToTui = (stream: NodeJS.ReadableStream | null): void => {
     if (!stream || typeof process.send !== 'function') return;

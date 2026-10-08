@@ -1,143 +1,275 @@
-<p align="center">
-  <a href="https://github.com/gihanrangana/leptonjs">
-    <img src="assets/logo.svg" alt="LeptonJS" width="420" />
-  </a>
-</p>
+![LeptonJS](assets/logo.svg)
 
-<p align="center">
-  Build native desktop apps with <strong>Node.js</strong> and <strong>web technologies</strong> — no bundled Chromium.
-</p>
+Build native desktop apps with **Node.js** and **web technologies** — no bundled Chromium.
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/@leptonjs/core"><img src="https://img.shields.io/npm/v/@leptonjs/core?style=flat-square&color=f36f22&label=npm" alt="npm version" /></a>
-  <a href="https://github.com/gihanrangana/leptonjs/blob/main/LICENSE"><img src="https://img.shields.io/github/license/gihanrangana/leptonjs?style=flat-square&color=416bb3" alt="license" /></a>
-  <img src="https://img.shields.io/badge/node-%E2%89%A5%2022.23-brightgreen?style=flat-square&logo=node.js&logoColor=white" alt="node version" />
-  <img src="https://img.shields.io/badge/platform-Windows%20x64-0078D4?style=flat-square&logo=windows&logoColor=white" alt="platform" />
-  <a href="https://github.com/gihanrangana/leptonjs/pulls"><img src="https://img.shields.io/badge/PRs-welcome-f36f22?style=flat-square" alt="PRs welcome" /></a>
-  <a href="https://github.com/gihanrangana/leptonjs/stargazers"><img src="https://img.shields.io/github/stars/gihanrangana/leptonjs?style=flat-square&color=f5a623" alt="GitHub stars" /></a>
-</p>
+![npm version](https://img.shields.io/npm/v/@leptonjs/core?style=flat-square&color=f36f22&label=npm)![license](https://img.shields.io/github/license/gihanrangana/leptonjs?style=flat-square&color=416bb3)![node version](https://img.shields.io/badge/node-%E2%89%A5%2022.23-brightgreen?style=flat-square&logo=node.js&logoColor=white)![platform](https://img.shields.io/badge/platform-Windows%20x64-0078D4?style=flat-square&logo=windows&logoColor=white)![PRs welcome](https://img.shields.io/badge/PRs-welcome-f36f22?style=flat-square)![GitHub stars](https://img.shields.io/github/stars/gihanrangana/leptonjs?style=flat-square&color=f5a623)
 
-<br />
 
-LeptonJS pairs a full Node.js backend with the OS-native WebView (`wry` / `tao`), giving you Electron-like DX at a fraction of the binary size. Define typed IPC routes with Zod, call them from your React (or vanilla JS) frontend, and ship production binaries with a single CLI command.
 
-> **Status:** `0.1.0-beta.3` — Windows x64 only. API may change. WebView2 Evergreen is required.
+
+LeptonJS is an experiment: a Node.js backend behind the OS webview (`wry` / `tao`), with typed routes and events. It is not production-ready. `0.1.0-beta.3` runs on Windows x64 only, the API can still change, and there is no `leptonjs create` scaffold.
+
+Try `[examples/react](examples/react/)`. Break it. Open an issue with what failed, including your Node version and the `--no-tui` log.
+
+WebView2 Evergreen is required.
+
+## 🚧 Beta — Looking for Testers
+
+LeptonJS is currently in beta and I'm looking for developers to test it
+and report bugs, performance issues, and developer-experience problems.
+
+Currently supported:
+
+- Windows x64
+- WebView2 Evergreen
+- Node.js backend
+- React / Vite frontend
+
+
+
+### I especially want feedback about
+
+- Installation
+- Development experience
+- Build process
+- IPC API
+- Application startup
+- WebView behavior
+- Binary size
+- Memory usage
+- Bugs/crashes
+
+If you try LeptonJS, please open an issue with your feedback.
 
 ---
 
-## Why LeptonJS?
 
 
-|                      | LeptonJS                              | Electron                         |
-| -------------------- | ------------------------------------- | -------------------------------- |
-| **Rendering engine** | OS WebView (WebView2 / WKWebView)     | Bundled Chromium                 |
-| **Binary size**      | ~2 MB native addon                    | ~150 MB+                         |
-| **Backend**          | Full Node.js                          | Full Node.js                     |
-| **IPC**              | Typed routes + events (Zod validated) | Manual `ipcMain` / `ipcRenderer` |
-| **Frontend**         | Any framework (React, Vue, vanilla)   | Any framework                    |
+## How it compares
 
+
+|                    | Electron     | Tauri                 | LeptonJS            |
+| ------------------ | ------------ | --------------------- | ------------------- |
+| Frontend           | Web          | Web                   | Web                 |
+| Rendering          | Chromium     | OS WebView            | OS WebView          |
+| Backend            | Node.js      | Rust                  | Node.js             |
+| Native layer       | C++          | Rust                  | Rust                |
+| IPC                | Electron IPC | Tauri commands/events | Typed routes/events |
+| React              | ✅            | ✅                     | ✅                   |
+| Node APIs          | ✅            | ❌/limited             | ✅                   |
+| Chromium bundled   | ✅            | ❌                     | ❌                   |
+| Small native layer | ❌            | ✅                     | ✅                   |
+
+
+macOS (WKWebView) and Linux are not shipped in this beta.
 
 ---
 
 
 
-## Quick Start
+## Quick start
 
 
 
-### 1. Install dependencies
+### 1. Install
 
 ```bash
-npm install @leptonjs/core @leptonjs/client @leptonjs/registry @leptonjs/react
+npm install @leptonjs/core @leptonjs/client @leptonjs/registry @leptonjs/react zod
 npm install -D @leptonjs/cli @leptonjs/vite
 ```
 
+Pin every `@leptonjs/*` package to the same version.
 
+### 2. Define a route
 
-### 2. Define your IPC contract
+`defineRoute` stores the schemas and the handler. `defineApi` assigns the wire name `greeting.getGreeting` and registers it.
 
 ```ts
-// src/shared/routes.ts
-import { defineRoutes, route } from '@leptonjs/registry';
-import { z } from 'zod';
+// src/backend/handlers/greeting.ts
+import { defineApi } from '@leptonjs/core';
+import { defineRoute } from '@leptonjs/registry';
+import z from 'zod';
 
-export const routes = defineRoutes({
-  getGreeting: route('getGreeting', z.string(), z.string()),
-});
+export const getGreeting = defineRoute(
+    z.string(),
+    z.string(),
+    async (name) => `Hello, ${name}!`,
+);
+
+export const greeting = defineApi({ getGreeting });
 ```
 
 ```ts
-// src/shared/events.ts
-import { defineEvents, event } from '@leptonjs/registry';
-import { z } from 'zod';
+// src/backend/api.ts
+import { defineApi } from '@leptonjs/core';
+import { greeting } from './handlers/greeting';
+
+export const api = defineApi({ greeting });
+```
+
+
+
+### 3. Define events
+
+`clock.tick` is a push. The backend emits a number and the page only listens. `echo.shout` takes a string from the page and pushes a string back.
+
+```ts
+// src/backend/events.ts
+import { defineEvent, defineEvents } from '@leptonjs/registry';
+import z from 'zod';
 
 export const events = defineEvents({
-  tick: event('tick', z.number()),
+    clock: {
+        tick: defineEvent(z.number()),
+    },
+    echo: {
+        shout: defineEvent(z.string(), z.string(), (text, emit) => {
+            emit(text.toUpperCase());
+        }),
+    },
 });
 ```
 
 
 
-### 3. Write your backend
+### 4. Start the app
+
+`app.ts` is the module dev reload imports. Re-export `api` and `events` from it, or a saved handler stays on the first version until you restart.
+
+```ts
+// src/backend/app.ts
+import type { IpcMain, RouteMap } from '@leptonjs/core';
+import { startClock } from './handlers/clock';
+
+export { api } from './api';
+export { events } from './events';
+
+export const setup = (ipcMain: IpcMain<RouteMap>): (() => void) => {
+    const stopClock = startClock(ipcMain);
+    return () => {
+        stopClock();
+    };
+};
+```
+
+```ts
+// src/backend/handlers/clock.ts
+import type { IpcMain, RouteMap } from '@leptonjs/core';
+import { events } from '../events';
+
+export const startClock = <R extends RouteMap>(ipcMain: IpcMain<R>): (() => void) => {
+    let n = 0;
+    const timer = setInterval(() => {
+        n += 1;
+        ipcMain.emit(events.clock.tick, n);
+    }, 1000);
+    return () => clearInterval(timer);
+};
+```
 
 ```ts
 // src/backend/main.ts
 import { app } from '@leptonjs/core';
-import { routes } from '../shared/routes';
-import { events } from '../shared/events';
+import { api } from './api';
+import { setup } from './app';
+import { events } from './events';
 
 void app.start({
-  routes,
-  title: 'My App',
-  setup(ipcMain) {
-    ipcMain.handle(routes.getGreeting, async (name) => {
-      return `Hello, ${name}!`;
-    });
-
-    let n = 0;
-    const interval = setInterval(() => {
-      ipcMain.emit(events.tick, ++n);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  },
+    api,
+    events,
+    title: 'My App',
+    setup,
 });
 ```
 
+You do not call `bindEvents` yourself. `app.start` registers the tree.
 
+### 5. Type the frontend
 
-### 4. Build your frontend
+Add a declaration file and include it from the frontend `tsconfig`. Use `import type` so the webview bundle does not pull in Node handlers.
 
-```tsx
-// src/frontend/App.tsx
-import { invoke } from '@leptonjs/client';
-import { useEvent } from '@leptonjs/react';
-import { routes } from '../shared/routes';
-import { events } from '../shared/events';
-import { useState } from 'react';
+```ts
+// declarations.d.ts
+import type { api } from './src/backend/api';
+import type { events } from './src/backend/events';
 
-function App() {
-  const tick = useEvent(events.tick, 0);
-  const [name, setName] = useState('World');
-  const [greeting, setGreeting] = useState('');
-
-  return (
-    <main>
-      <h1>My Desktop App</h1>
-      <p>Tick: {tick}</p>
-      <input value={name} onChange={(e) => setName(e.target.value)} />
-      <button onClick={async () => setGreeting(await invoke(routes.getGreeting, name))}>
-        Greet
-      </button>
-      <p>{greeting}</p>
-    </main>
-  );
+declare module '@leptonjs/client' {
+    interface LeptonApp {
+        api: typeof api;
+        events: typeof events;
+    }
 }
 ```
 
+```json
+{
+    "include": ["./src/frontend", "./declarations.d.ts"]
+}
+```
 
+After this, `ipc.invoke` and `ipc.on` suggest `greeting.getGreeting`, `clock.tick`, and `echo.shout`.
 
-### 5. Configure Vite
+### 6. Call it from React
+
+`useEvent('clock.tick', 0)` keeps the latest tick in state. `0` is only the first render. It is not sent to the backend.
+
+`ipc.on('clock.tick', ...)` is the same stream without React state. Return its stop function from `useEffect`.
+
+`ipc.on('echo.shout', text, ...)` sends `text`. The callback receives the uppercase string. Stop that subscription after the result so each click does not add another listener.
+
+```tsx
+// src/frontend/App.tsx
+import { ipc } from '@leptonjs/client';
+import { useEvent } from '@leptonjs/react';
+import { useEffect, useState } from 'react';
+
+export function App() {
+    const [name, setName] = useState('World');
+    const [greeting, setGreeting] = useState('');
+    const [text, setText] = useState('hello');
+    const [shout, setShout] = useState('');
+
+    const tick = useEvent('clock.tick', 0);
+
+    useEffect(() => {
+        return ipc.on('clock.tick', (n) => {
+            console.log(n);
+        });
+    }, []);
+
+    const onShout = () => {
+        const stop = ipc.on('echo.shout', text, (result) => {
+            setShout(result);
+            stop();
+        });
+    };
+
+    return (
+        <main>
+            <p>Tick: {tick}</p>
+            <button
+                type="button"
+                onClick={async () => {
+                    setGreeting(await ipc.invoke('greeting.getGreeting', name));
+                }}
+            >
+                Greet
+            </button>
+            <p>{greeting}</p>
+            <button type="button" onClick={onShout}>
+                Shout
+            </button>
+            <p>{shout}</p>
+        </main>
+    );
+}
+```
+
+`ipc.greeting.getGreeting(name)` is the same call as `ipc.invoke('greeting.getGreeting', name)`.
+
+Passing a payload to `clock.tick` is a type error. Omitting the string on `echo.shout` is a type error.
+
+### 7. Configure Vite
 
 ```ts
 // vite.config.ts
@@ -146,23 +278,26 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [
-    react(),
-    leptonjs({
-      backendEntry: './src/backend/main.ts',
-      watch: ['./src/backend', './src/shared'],
-    }),
-  ],
+    plugins: [
+        react(),
+        leptonjs({
+            backendEntry: './src/backend/main.ts',
+            watch: ['./src/backend'],
+        }),
+    ],
+    server: { host: '127.0.0.1' },
 });
 ```
 
 
 
-### 6. Run
+### 8. Run
 
 ```bash
 npx leptonjs dev
 ```
+
+Restart `leptonjs dev` after you change `@leptonjs/core` or the preload script. The preload is injected when the window is created.
 
 ---
 
@@ -178,7 +313,7 @@ npx leptonjs dev
 │                    │                            │
 │  @leptonjs/core    │   @leptonjs/client         │
 │  ┌──────────┐      │   @leptonjs/react          │
-│  │ IPC Srv  │◄────-┼──► invoke() / listen()     │
+│  │ IPC Srv  │◄────-┼──► ipc.invoke / ipc.on     │
 │  │ (HTTP +  │      │   useEvent()               │
 │  │  SSE)    │      │                            │
 │  └──────────┘      │                            │
@@ -187,19 +322,21 @@ npx leptonjs dev
 │  (Rust N-API)      │                            │
 │       │            │                            │
 │  wry + tao         │   OS WebView               │
-│  (native windows)  │   (WebView2 / WKWebView)   │
+│  (native windows)  │   (WebView2)               │
 └────────────────────┴────────────────────────────┘
-        ↕ Shared: @leptonjs/registry
-          (routes, events, Zod schemas)
+        ↕ @leptonjs/registry
+          (defineRoute, defineEvent, Zod)
 ```
 
-1. `@leptonjs/registry` defines the typed IPC contract (routes + events) shared between backend and frontend.
-2. `@leptonjs/core` runs on Node.js — manages the app lifecycle, starts the IPC server, and controls native windows.
-3. `@leptonjs/client` runs in the WebView — calls backend routes and subscribes to events.
-4. `@leptonjs/react` provides React hooks (`useEvent`) for declarative event subscriptions.
-5. `@leptonjs/vite` orchestrates the dev experience — runs the Vite dev server and the Node.js backend together.
-6. `@leptonjs/cli` provides the `leptonjs` command for dev, build, start, and pack workflows.
-7. `@leptonjs/native` loads the platform-specific Rust addon that creates native windows with embedded WebViews.
+1. `@leptonjs/registry` defines route leaves (`defineRoute`) and events (`defineEvent` / `defineEvents`).
+2. `@leptonjs/core` runs on Node.js. `defineApi` names the routes. `app.start({ api, events })` registers them, starts the IPC server, and opens the window.
+3. `@leptonjs/client` runs in the WebView. `ipc` calls routes and subscribes to events by dotted name.
+4. `@leptonjs/react` provides `useEvent(name, initial)` for push events.
+5. `@leptonjs/vite` runs the Vite dev server and the Node backend together.
+6. `@leptonjs/cli` provides `leptonjs dev`, `build`, `start`, and `pack`.
+7. `@leptonjs/native` loads the Rust addon that creates the WebView2 window.
+
+The page does not import handler implementations. A `declare module '@leptonjs/client'` block merges your `api` and `events` types into `ipc`.
 
 ---
 
@@ -208,73 +345,61 @@ npx leptonjs dev
 ## Packages
 
 
-| Package                                                              | Role                                                   | README                                             |
-| -------------------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------- |
-| `[@leptonjs/core](packages/core/)`                                   | Node.js runtime — `app`, IPC server, window management | [README](packages/core/README.md)                  |
-| `[@leptonjs/client](packages/client/)`                               | Renderer-side `invoke()` and `listen()`                | [README](packages/client/README.md)                |
-| `[@leptonjs/registry](packages/registry/)`                           | Shared `route()`, `event()`, Zod schemas, and types    | [README](packages/registry/README.md)              |
-| `[@leptonjs/react](packages/react/)`                                 | React hook `useEvent()`                                | [README](packages/react/README.md)                 |
-| `[@leptonjs/vite](packages/vite/)`                                   | Vite plugin — dev server + backend orchestration       | [README](packages/vite/README.md)                  |
-| `[@leptonjs/cli](packages/cli/)`                                     | `leptonjs` CLI — `dev` / `build` / `start` / `pack`    | [README](packages/cli/README.md)                   |
-| `[@leptonjs/native](packages/native/)`                               | Native addon loader (platform resolution)              | [README](packages/native/README.md)                |
-| `[@leptonjs/native-win32-x64-msvc](packages/native-win32-x64-msvc/)` | Pre-built Windows x64 binary                           | [README](packages/native-win32-x64-msvc/README.md) |
+| Package                                                              | Role                                          | README                                             |
+| -------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------- |
+| `[@leptonjs/core](packages/core/)`                                   | `app.start`, `defineApi`, windows, IPC server | [README](packages/core/README.md)                  |
+| `[@leptonjs/client](packages/client/)`                               | Frontend `ipc` (`invoke`, `on`)               | [README](packages/client/README.md)                |
+| `[@leptonjs/registry](packages/registry/)`                           | `defineRoute`, `defineEvent`, Zod schemas     | [README](packages/registry/README.md)              |
+| `[@leptonjs/react](packages/react/)`                                 | `useEvent(name, initial)`                     | [README](packages/react/README.md)                 |
+| `[@leptonjs/vite](packages/vite/)`                                   | Vite plugin for dev                           | [README](packages/vite/README.md)                  |
+| `[@leptonjs/cli](packages/cli/)`                                     | `leptonjs` CLI                                | [README](packages/cli/README.md)                   |
+| `[@leptonjs/native](packages/native/)`                               | Native addon loader                           | [README](packages/native/README.md)                |
+| `[@leptonjs/native-win32-x64-msvc](packages/native-win32-x64-msvc/)` | Pre-built Windows x64 binary                  | [README](packages/native-win32-x64-msvc/README.md) |
 
 
 ---
 
 
 
-## Project Structure
-
-A typical LeptonJS app follows this layout:
+## Project structure
 
 ```
 my-app/
+├── declarations.d.ts          ← augments LeptonApp for the frontend
 ├── src/
-│   ├── shared/                     ← IPC contract (imported by both sides)
-│   │   ├── routes.ts               ← defineRoutes(...)
-│   │   ├── events.ts               ← defineEvents(...)
-│   │   └── types.ts                ← plain DTOs
 │   ├── backend/
-│   │   ├── main.ts                 ← app.start({ ... })
-│   │   ├── app.ts                  ← setup function (HMR-reloaded in dev)
-│   │   └── handlers/               ← route handler implementations
+│   │   ├── main.ts            ← app.start({ api, events, setup })
+│   │   ├── app.ts             ← setup, plus re-exports of api and events
+│   │   ├── api.ts             ← defineApi(...)
+│   │   ├── events.ts          ← defineEvents(...)
+│   │   └── handlers/
 │   └── frontend/
-│       ├── main.tsx                ← React entry point
-│       ├── App.tsx                 ← root component
-│       └── ...
+│       ├── main.tsx
+│       └── App.tsx
 ├── vite.config.ts
-├── tsconfig.json
+├── tsconfig.app.json          ← include declarations.d.ts
 ├── tsconfig.backend.json
-├── package.json                    ← or lepton.config.json
-└── index.html
+└── package.json               ← "lepton" field, or lepton.config.json
 ```
 
-
-
-### Why `shared/`?
-
-The `shared/` directory contains route and event definitions that are imported by **both** the backend and frontend. Since these are just Zod schemas and type definitions (no Node.js or DOM APIs), they're safe to use everywhere. This gives you:
-
-- **Type-safe IPC** — the compiler catches mismatches between `invoke(routes.getGreeting, ...)` and `ipcMain.handle(routes.getGreeting, ...)`.
-- **Runtime validation** — Zod validates inputs on the backend, so malformed payloads are rejected before they reach your handler.
+Routes and events live next to the backend that implements them. The frontend sees their types through `declarations.d.ts`, not through a shared runtime module.
 
 ---
 
 
 
-## CLI Reference
+## CLI
 
 ```bash
 leptonjs dev [target]               # Dev mode with HMR
 leptonjs build [target]             # Production build
-leptonjs start [target]             # Run production build locally
+leptonjs start [target]             # Run the production build locally
 leptonjs pack [target] [flags]      # Package for distribution
 ```
 
-All commands accept `--no-tui` to disable the interactive terminal UI (for CI/CD).
+`--no-tui` prints plain logs. Use it in CI and when a terminal is not a TTY.
 
-### Pack Flags
+### Pack flags
 
 
 | Flag                   | Description                             |
@@ -287,28 +412,28 @@ All commands accept `--no-tui` to disable the interactive terminal UI (for CI/CD
 | `--bundle-runtime`     | Bundle the Node.js runtime              |
 
 
-See the full `@leptonjs/cli` [README](packages/cli/README.md) for details.
+See the `@leptonjs/cli` [README](packages/cli/README.md) for the rest.
 
 ### Configuration
 
-The CLI reads config from `lepton.config.json` or the `"lepton"` field in `package.json`:
+`lepton.config.json`, or the `"lepton"` field in `package.json`:
 
 ```json
 {
-  "frontend": ".",
-  "backend": "src/backend/main.ts",
-  "watch": ["src/backend", "src/shared"],
-  "port": 5173,
-  "backendTsconfig": "tsconfig.backend.json",
-  "appName": "My App",
-  "icon": "src/assets/icon.ico",
-  "splash": {
-    "image": "src/assets/splash.png",
-    "backgroundColor": "#0f1419",
-    "width": 520,
-    "height": 360,
-    "minDurationMs": 2000
-  }
+    "frontend": ".",
+    "backend": "src/backend/main.ts",
+    "watch": ["src/backend"],
+    "port": 5173,
+    "backendTsconfig": "tsconfig.backend.json",
+    "appName": "My App",
+    "icon": "src/assets/icon.ico",
+    "splash": {
+        "image": "src/assets/splash.png",
+        "backgroundColor": "#0f1419",
+        "width": 520,
+        "height": 360,
+        "minDurationMs": 2000
+    }
 }
 ```
 
@@ -316,125 +441,123 @@ The CLI reads config from `lepton.config.json` or the `"lepton"` field in `packa
 
 
 
-## IPC in Depth
+## IPC
 
+Transport is loopback HTTP on `127.0.0.1`. Routes are `POST /__ipc`. Push events are `GET /__sse`. An input event subscription is `POST /__on`, and unsubscribe is `POST /__off`. Those endpoints require the `x-lepton-token` header injected by the preload script.
 
-
-### Routes (Request / Response)
-
-Routes model typed RPC calls from the renderer to the backend.
-
-**Define** (shared):
+### Routes
 
 ```ts
-const getUser = route('getUser',
-  z.object({ id: z.number() }),                    // input
-  z.object({ name: z.string(), email: z.string() }) // output
+const getUser = defineRoute(
+    z.object({ id: z.number() }),
+    z.object({ name: z.string(), email: z.string() }),
+    async ({ id }) => {
+        const user = await db.findUser(id);
+        return { name: user.name, email: user.email };
+    },
 );
+
+export const users = defineApi({ getUser });
+export const api = defineApi({ users });
 ```
 
-**Handle** (backend):
+```ts
+const user = await ipc.invoke('users.getUser', { id: 42 });
+```
+
+Zod checks the input before the handler runs, and checks the handler return value before it is sent.
+
+### Push events
+
+`defineEvent(payloadSchema)` has no page input. Emit from the backend:
 
 ```ts
-ipcMain.handle(routes.getUser, async ({ id }) => {
-  const user = await db.findUser(id);
-  return { name: user.name, email: user.email };
+ipcMain.emit(events.clock.tick, n);
+```
+
+Listen on the page:
+
+```ts
+const tick = useEvent('clock.tick', 0);
+const stop = ipc.on('clock.tick', (n) => {
+    console.log(n);
 });
 ```
 
-**Call** (frontend):
+`useEvent` does not send `0` to the backend. Until the first SSE message, the component shows that initial value.
+
+### Input events
+
+`defineEvent(inputSchema, payloadSchema, handler)` runs when the page subscribes with a payload. `handler` is `(input, emit) => void | (() => void)`. Return a function when the subscription should keep something alive. `app.start` calls that function on unsubscribe and on dev reload.
 
 ```ts
-const user = await invoke(routes.getUser, { id: 42 });
-// user is typed as { name: string; email: string }
-```
-
-
-
-### Events (Server → Client push)
-
-Events model typed pushes from the backend to all connected renderers via SSE.
-
-**Define** (shared):
-
-```ts
-const progress = event('progress', z.object({
-  percent: z.number(),
-  message: z.string(),
-}));
-```
-
-**Emit** (backend):
-
-```ts
-ipcMain.emit(events.progress, { percent: 75, message: 'Almost done...' });
-```
-
-**Listen** (frontend — vanilla):
-
-```ts
-const unsub = listen(events.progress, ({ percent, message }) => {
-  console.log(`${percent}%: ${message}`);
+shout: defineEvent(z.string(), z.string(), (text, emit) => {
+    emit(text.toUpperCase());
 });
 ```
 
-**Subscribe** (frontend — React):
-
-```tsx
-const progress = useEvent(events.progress, { percent: 0, message: '' });
+```ts
+const stop = ipc.on('echo.shout', 'hello', (result) => {
+    console.log(result); // "HELLO"
+    stop();
+});
 ```
+
+A push event such as `clock.tick` is not in the input-event map. Posting a payload to it returns `unknown event`.
 
 ---
 
 
 
-## Backend HMR
+## Backend reload in dev
 
-During `leptonjs dev`, the backend supports **hot module replacement**:
+`leptonjs dev` watches the directories in `lepton.watch`. The setup module is `app.ts` beside `backendEntry`, unless you set another path.
 
-1. You export a `setup(ipcMain)` function from your setup module (default: `app.ts` next to your `backendEntry`).
-2. The `setup` function returns an optional **dispose** callback.
-3. When you edit a `.ts`/`.js` file in a watched directory, LeptonJS:
-  - Calls the previous `dispose()` to clean up (clear intervals, close connections, etc.)
-  - Clears all route handlers.
-  - Re-imports and re-runs `setup()` with a fresh `ipcMain`.
+On a saved `.ts` or `.js` file it:
 
-```ts
-// src/backend/app.ts
-export const setup = (ipcMain: IpcMain<typeof routes>) => {
-  ipcMain.handle(routes.getGreeting, async (name) => `Hello, ${name}!`);
+1. Calls the previous `setup` dispose function.
+2. Clears route handlers and event subscriptions.
+3. Registers `api` and `events` exported by the fresh `app.ts` module.
+4. Runs `setup` again.
 
-  const interval = setInterval(() => { /* ... */ }, 1000);
-
-  // Cleanup on HMR reload:
-  return () => clearInterval(interval);
-};
-```
+If `app.ts` does not export `api` or `events`, reload keeps the objects captured at startup.
 
 ---
 
 
 
-## App Dependencies
+## Current limits
 
-When consuming published packages from npm (not workspace links):
+- Windows x64 and WebView2 only. No macOS or Linux binary.
+- Beta API. Names and option shapes can change before 1.0.
+- No `leptonjs create`. Copy `[examples/react](examples/react/)` or follow the quick start.
+- No automated test suite in this repo yet.
+- Frontend autocomplete depends on `declarations.d.ts` being part of the frontend program.
+- Changing packages under `packages/` requires a package rebuild and a new `leptonjs dev` process before the window sees it.
+
+---
+
+
+
+## App dependencies
+
+When you install from npm instead of this workspace:
 
 ```json
 {
-  "dependencies": {
-    "@leptonjs/core": "0.1.0-beta.3",
-    "@leptonjs/client": "0.1.0-beta.3",
-    "@leptonjs/registry": "0.1.0-beta.3",
-    "@leptonjs/react": "0.1.0-beta.3"
-  },
-  "devDependencies": {
-    "@leptonjs/cli": "0.1.0-beta.3",
-    "@leptonjs/vite": "0.1.0-beta.3"
-  }
+    "dependencies": {
+        "@leptonjs/core": "0.1.0-beta.3",
+        "@leptonjs/client": "0.1.0-beta.3",
+        "@leptonjs/registry": "0.1.0-beta.3",
+        "@leptonjs/react": "0.1.0-beta.3",
+        "zod": "^4.4.3"
+    },
+    "devDependencies": {
+        "@leptonjs/cli": "0.1.0-beta.3",
+        "@leptonjs/vite": "0.1.0-beta.3"
+    }
 }
 ```
-
-> **Pin the same version on every** `@leptonjs/`* **package** to avoid mismatches.
 
 ---
 
@@ -446,70 +569,57 @@ When consuming published packages from npm (not workspace links):
 | Requirement  | Details                                             |
 | ------------ | --------------------------------------------------- |
 | **Node.js**  | ≥ 22.23                                             |
-| **OS**       | Windows x64 (beta)                                  |
+| **OS**       | Windows x64                                         |
 | **WebView2** | Evergreen runtime (pre-installed on modern Windows) |
-| **Rust**     | Required only to build native addon from source     |
-| **pnpm**     | Required only for monorepo development              |
+| **Rust**     | Only if you build the native addon from source      |
+| **pnpm**     | Only for this monorepo                              |
 
 
 ---
 
 
 
-## Examples
+## Example
 
 
 | Example                             | Description                                                             |
 | ----------------------------------- | ----------------------------------------------------------------------- |
-| `[examples/hello](examples/hello/)` | Minimal hello-world with typed IPC, events, and multi-window            |
-| `[examples/react](examples/react/)` | Full React + Vite app with backend HMR, shared types, and splash screen |
+| `[examples/react](examples/react/)` | React + Vite app: greeting route, clock push, shout input event, splash |
 
+
+From this repo:
+
+```bash
+pnpm install
+pnpm build
+pnpm leptonjs -- dev react
+```
 
 ---
 
 
 
-## Development (Contributing)
+## Development
 
-This repo is a pnpm workspace. All packages live under `packages/`.
-
-### Build Everything
+This repo is a pnpm workspace. Packages live under `packages/`.
 
 ```bash
 pnpm install
 pnpm build
 ```
 
-This runs three steps:
-
-1. `build:native` — Compiles Rust → `.node` addon
-2. `build:host` — Builds the native host binary
-3. `build:packages` — Compiles all TypeScript packages
-
-
-
-### Run Examples
+`pnpm build` compiles the Rust addon, the host binary, and the TypeScript packages.
 
 ```bash
-# Dev mode (HMR)
 pnpm leptonjs -- dev react
-
-# Production build
 pnpm leptonjs -- build react --no-tui
-
-# Run production build
 pnpm leptonjs -- start react --no-tui
-
-# Package for distribution
 pnpm leptonjs -- pack react --no-tui --no-installer
 ```
 
+Dev IPC and the Vite origin use `127.0.0.1`, not `localhost`, so WebView2 CORS matches. The default CLI UI is the Ink TUI. Pass `--no-tui` for plain logs.
 
-
-### Notes
-
-- Dev IPC and the Vite origin use `127.0.0.1`, not `localhost`, so CORS matches WebView2.
-- The default CLI UI is the [Ink](https://github.com/vadimdemedes/ink) TUI (requires TTY). Pass `--no-tui` for plain logs in CI/pipes.
+See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Run `pnpm validate` on the files you changed.
 
 ---
 

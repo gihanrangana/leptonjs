@@ -4,16 +4,18 @@
  * Loopback-only HTTP server providing the typed IPC transport:
  *   - GET  /             → serves the app's HTML page (same-origin, no CORS)
  *   - POST /__ipc        → request/response RPC (zod-validated)
+ *   - POST /__on         → subscribe to an event that takes input
+ *   - POST /__off        → unsubscribe that subscription
  *   - GET  /__sse        → server→client streaming (Server-Sent Events)
  *
- * Security: `/__ipc` and `/__sse` require header `x-lepton-token` matching the
+ * Security: `/__ipc`, `/__on`, `/__off`, and `/__sse` require header `x-lepton-token` matching the
  * per-instance token injected into the preload script. The HTML page is unauthenticated;
  * the token protects the IPC channel from other local processes.
  */
 
 import { randomBytes } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
-import { findRoute } from '@leptonjs/registry';
+import { type EventStop, findRoute, type TypedEvent } from '@leptonjs/registry';
 import { logger } from '../logger';
 import { createAssetHandler } from './helpers/assets';
 import {
@@ -38,6 +40,15 @@ export const createIpcServer = <R extends RouteMap>(
 ): IpcServer<R> => {
     const handlers = new Map<string, RegisteredHandler>();
     const sseClients = new Set<ServerResponse>();
+    const eventHandlers = new Map<
+        string,
+        {
+            inputSchema?: { parse(data: unknown): unknown } | undefined;
+            payloadSchema: { parse(data: unknown): unknown };
+            handler: (input: unknown, emit: (payload: unknown) => void) => EventStop | undefined;
+        }
+    >();
+    const subscriptions = new Map<string, () => void>();
     const token = randomBytes(24).toString('hex');
     const assetHandler = options.assetDir ? createAssetHandler(options.assetDir) : null;
 
@@ -54,7 +65,9 @@ export const createIpcServer = <R extends RouteMap>(
             for (const client of sseClients) {
                 try {
                     client.write(': keepalive\n\n');
-                } catch { /* client already gone */ }
+                } catch {
+                    /* client already gone */
+                }
             }
         }, SSE_KEEPALIVE_MS);
         keepaliveTimer.unref();
@@ -138,6 +151,101 @@ export const createIpcServer = <R extends RouteMap>(
         }
     };
 
+    const handleOn = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
+        let parsed: IpcRequest | null;
+
+        try {
+            parsed = parseIpcRequest(JSON.parse(await readBody(req)));
+        } catch (e) {
+            if (e instanceof BodyTooLargeError) {
+                send(res, 413, errorResponse('', 'Payload too large'));
+                abortRequest(req);
+                return;
+            }
+            logger.warn('ipc', 'Received invalid JSON in event subscribe');
+            send(res, 400, errorResponse('', 'Invalid JSON'));
+            return;
+        }
+
+        if (!parsed) {
+            logger.warn('ipc', 'Received malformed event subscribe');
+            send(res, 400, errorResponse('', 'Invalid JSON'));
+            return;
+        }
+
+        const request = parsed;
+        const entry = eventHandlers.get(request.name);
+        if (!entry?.inputSchema) {
+            send(res, 404, errorResponse(request.id, `unknown event: ${request.name}`));
+            return;
+        }
+
+        let input: unknown;
+        try {
+            input = entry.inputSchema.parse(request.input);
+        } catch (e) {
+            send(res, 400, errorResponse(request.id, `invalid input: ${(e as Error).message}`));
+            return;
+        }
+
+        const emit = (payload: unknown): void => {
+            let validated: unknown;
+            try {
+                validated = entry.payloadSchema.parse(payload);
+            } catch (e) {
+                logger.warn('ipc', `Invalid event payload: ${request.name}`, {
+                    error: (e as Error).message,
+                });
+                return;
+            }
+            const frame = `event: ${request.name}\ndata: ${JSON.stringify({
+                __sub: request.id,
+                payload: validated,
+            })}\n\n`;
+            for (const client of sseClients) client.write(frame);
+        };
+
+        try {
+            const stop = entry.handler(input, emit);
+            if (typeof stop === 'function') subscriptions.set(request.id, stop);
+            send(res, 200, okResponse(request.id, null));
+        } catch (e) {
+            logger.error('ipc', `Event handler error: ${request.name}`, {
+                error: (e as Error).message,
+            });
+            send(res, 500, errorResponse(request.id, `handler error: ${(e as Error).message}`));
+        }
+    };
+
+    const handleOff = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
+        let id = '';
+
+        try {
+            const body = JSON.parse(await readBody(req)) as { id?: unknown };
+            if (typeof body.id === 'string') id = body.id;
+        } catch (e) {
+            if (e instanceof BodyTooLargeError) {
+                send(res, 413, errorResponse('', 'Payload too large'));
+                abortRequest(req);
+                return;
+            }
+            send(res, 400, errorResponse('', 'Invalid JSON'));
+            return;
+        }
+
+        if (id.length === 0) {
+            send(res, 400, errorResponse('', 'Invalid JSON'));
+            return;
+        }
+
+        const stop = subscriptions.get(id);
+        if (stop) {
+            subscriptions.delete(id);
+            stop();
+        }
+        send(res, 200, okResponse(id, null));
+    };
+
     const handleSse = (req: IncomingMessage, res: ServerResponse): void => {
         res.writeHead(200, {
             'Content-Type': 'text/event-stream',
@@ -194,6 +302,25 @@ export const createIpcServer = <R extends RouteMap>(
                     if (!res.headersSent) {
                         send(res, 500, errorResponse('', 'Internal error'));
                     }
+                    abortRequest(req);
+                });
+                return;
+            }
+
+            if (req.method === 'POST' && (pathname === '/__on' || pathname === '/__off')) {
+                applyCors(req, res, options.corsOrigin ?? '');
+
+                if (!authorize(req, token)) {
+                    logger.warn('server', 'Unauthorized event request rejected');
+                    send(res, 401, errorResponse('', 'Unauthorized'));
+                    abortRequest(req);
+                    return;
+                }
+
+                const run = pathname === '/__on' ? handleOn(req, res) : handleOff(req, res);
+                void run.catch((e) => {
+                    logger.error('ipc', 'Unhandled event error', { error: (e as Error).message });
+                    if (!res.headersSent) send(res, 500, errorResponse('', 'Internal error'));
                     abortRequest(req);
                 });
                 return;
@@ -291,6 +418,28 @@ export const createIpcServer = <R extends RouteMap>(
         emit(name: string, data: unknown): void {
             const payload = `event: ${name}\ndata: ${JSON.stringify(data)}\n\n`;
             for (const client of sseClients) client.write(payload);
+        },
+        onEvent(name: string, event: TypedEvent<unknown, unknown>): void {
+            if (!event.handler) return;
+
+            eventHandlers.set(name, {
+                inputSchema: event.inputSchema,
+                payloadSchema: event.payloadSchema,
+                handler: event.handler,
+            });
+        },
+        offEvent(id: string): void {
+            const stop = subscriptions.get(id);
+
+            if (!stop) return;
+
+            subscriptions.delete(id);
+            stop();
+        },
+        clearEvents(): void {
+            for (const stop of subscriptions.values()) stop();
+            subscriptions.clear();
+            eventHandlers.clear();
         },
     };
 };

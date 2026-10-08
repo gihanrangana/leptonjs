@@ -30,7 +30,7 @@ packages/
   vite/          # Vite plugin
   cli/           # `leptonjs` CLI
 native/          # Rust (wry + tao) N-API addon
-examples/        # sample apps (e.g. `react`, `hello`)
+examples/        # sample apps (`react`)
 ```
 
 Change only what your PR needs. Prefer small, focused PRs.
