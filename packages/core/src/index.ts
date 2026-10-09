@@ -31,6 +31,8 @@ import { native } from '@leptonjs/native';
 import { defineEvents, defineRoutes, event, findEvent, findRoute, route } from '@leptonjs/registry';
 import { importSetupFresh } from './helpers';
 import { DEFAULT_MAIN_WINDOW } from './helpers/constants';
+import { mergeDevRoutes, registerDevMenu } from './helpers/dev-menu';
+import { cleanMainWindowId } from './helpers/dev-window';
 import { openMainAndOptionalSplash, resolveSplash } from './helpers/splash';
 import { bindEvents } from './ipc/bind-events';
 import { createIpcMain } from './ipc/ipcMain';
@@ -86,6 +88,7 @@ const onWindowCreated = (id: number): void => {
 
 const onWindowClosed = (id: number, server?: { stop(): Promise<void> }): void => {
     openWindows.delete(id);
+    cleanMainWindowId(id);
 
     logger.debug('native', `Window ${id} closed (open: ${openWindows.size})`);
 
@@ -398,6 +401,7 @@ export const app = {
             const ipcMain = createIpcMain<R>(server);
             let dispose: (() => void) | undefined;
             const routeTable = routes as RouteMap;
+            mergeDevRoutes(routeTable);
 
             // The IPC server closes over this object. Swap its contents so new
             // routes and schemas are visible without recreating the server.
@@ -429,6 +433,9 @@ export const app = {
                     nextApi.register(ipcMain);
                 }
 
+                mergeDevRoutes(routeTable);
+                registerDevMenu(ipcMain);
+
                 const nextEvents = backend?.events ?? events;
                 if (nextEvents) bindEvents(ipcMain, nextEvents);
 
@@ -444,7 +451,7 @@ export const app = {
 
             await runSetup();
 
-            const preload = buildPreloadScript(server.baseUrl, server.token);
+            const preload = buildPreloadScript(server.baseUrl, server.token, true);
             openMainAndOptionalSplash({
                 url: devUrl as string,
                 title,
