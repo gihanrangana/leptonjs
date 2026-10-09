@@ -4,7 +4,11 @@ export declare function closeWindow(id: number): void
 
 export declare function createWindow(url: string, title: string, initScript: string | undefined | null, options: WindowOptions, onEvent: (event: WindowEvent) => void): number
 
+export declare function openDevTools(id: number): void
+
 export declare function quit(): void
+
+export declare function reloadWindow(id: number): void
 
 export declare function setAppUserModelId(id: string): void
 
@@ -29,4 +33,5 @@ export interface WindowOptions {
   width?: number
   height?: number
   backgroundColor?: Array<number>
+  devTools?: boolean
 }

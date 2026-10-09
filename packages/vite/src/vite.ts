@@ -5,6 +5,8 @@ import type { Plugin, ViteDevServer } from 'vite';
 
 import type { LeptonPluginOptions } from './types.js';
 
+const BACKEND_RESTART_EXIT = 75;
+
 const forwardToTui = (stream: NodeJS.ReadableStream | null): void => {
     if (!stream || typeof process.send !== 'function') return;
 
@@ -117,6 +119,18 @@ export const leptonjs = (options: LeptonPluginOptions): Plugin => {
             const exitCode = code ?? 0;
 
             if (stopping || gen !== generation) return;
+
+            if (exitCode === BACKEND_RESTART_EXIT && lastDevUrl) {
+                crashRestarts = 0;
+                logBackend(`[lepton] backend restart requested`);
+
+                restartTimer = setTimeout(() => {
+                    restartTimer = null;
+                    if (stopping || gen !== generation) return;
+                    startBackend(lastDevUrl);
+                }, 300);
+                return;
+            }
 
             if (exitCode !== 0 && lastDevUrl) {
                 crashRestarts += 1;

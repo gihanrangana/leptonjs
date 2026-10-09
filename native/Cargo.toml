@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 [dependencies]
 napi = { version = "3.12", features = ["napi8"] }
 napi-derive = "3.6"
-wry = "0.56"
+wry = { version = "0.56", features = ["devtools"] }
 tao = "0.36"
 
 [build-dependencies]
