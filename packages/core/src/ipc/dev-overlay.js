@@ -2,7 +2,7 @@
     if (window.__leptonDevOverlay) return;
     window.__leptonDevOverlay = true;
 
-    var invoke = window.__lepton && window.__lepton.invoke;
+    var invoke = window.__lepton?.invoke;
     if (typeof invoke !== 'function') return;
 
     var STORAGE_KEY = 'lepton.devOverlay.pos';
@@ -241,7 +241,7 @@
     var items = Array.prototype.slice.call(panel.querySelectorAll('.item'));
 
     var call = (name) => {
-        invoke('lepton.dev.' + name, null).catch((err) => {
+        invoke(`lepton.dev.${name}`, null).catch((err) => {
             console.error('[lepton.dev]', err);
         });
     };
@@ -273,8 +273,8 @@
     var clampIntoView = () => {
         if (host.style.right !== 'auto') return;
         var r = host.getBoundingClientRect();
-        host.style.left = Math.max(0, Math.min(window.innerWidth - SIZE, r.left)) + 'px';
-        host.style.top = Math.max(0, Math.min(window.innerHeight - SIZE, r.top)) + 'px';
+        host.style.left = `${Math.max(0, Math.min(window.innerWidth - SIZE, r.left))}px`;
+        host.style.top = `${Math.max(0, Math.min(window.innerHeight - SIZE, r.top))}px`;
     };
 
     fab.addEventListener('click', (e) => {
@@ -292,7 +292,7 @@
 
     panel.addEventListener('click', (e) => {
         var t = e.target;
-        var btn = t && t.closest ? t.closest('[data-cmd]') : null;
+        var btn = t?.closest ? t.closest('[data-cmd]') : null;
         if (!btn) return;
         call(btn.getAttribute('data-cmd'));
         setOpen(false, true);
@@ -331,6 +331,7 @@
         }
         if (isOpen() && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
             e.preventDefault();
+            // biome-ignore lint/correctness/noInnerDeclarations: we need to declare the variable here
             var i = items.indexOf(shadow.activeElement);
             if (e.key === 'ArrowDown') i = i >= items.length - 1 ? 0 : i + 1;
             else i = i <= 0 ? items.length - 1 : i - 1;
@@ -340,22 +341,24 @@
 
     var restore = () => {
         try {
+            // biome-ignore lint/correctness/noInnerDeclarations: we need to declare the variable here
             var raw = localStorage.getItem(STORAGE_KEY);
             if (!raw) return;
+            // biome-ignore lint/correctness/noInnerDeclarations: we need to declare the variable here
             var pos = JSON.parse(raw);
             if (typeof pos.left !== 'number' || typeof pos.top !== 'number') return;
-            host.style.left = pos.left + 'px';
-            host.style.top = pos.top + 'px';
+            host.style.left = `${pos.left}px`;
+            host.style.top = `${pos.top}px`;
             host.style.right = 'auto';
             host.style.bottom = 'auto';
-        } catch (err) {}
+        } catch (_err) {}
     };
 
     var save = () => {
         var r = host.getBoundingClientRect();
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify({ left: r.left, top: r.top }));
-        } catch (err) {}
+        } catch (_err) {}
     };
 
     var drag = null;
@@ -377,8 +380,8 @@
         }
         var x = Math.max(0, Math.min(window.innerWidth - SIZE, e.clientX - drag.dx));
         var y = Math.max(0, Math.min(window.innerHeight - SIZE, e.clientY - drag.dy));
-        host.style.left = x + 'px';
-        host.style.top = y + 'px';
+        host.style.left = `${x}px`;
+        host.style.top = `${y}px`;
         host.style.right = 'auto';
         host.style.bottom = 'auto';
     });
