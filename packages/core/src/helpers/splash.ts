@@ -10,6 +10,7 @@ import {
 } from '../types';
 import { parseHexColorToRgba } from '.';
 import { DEFAULT_MAIN_WINDOW, HIDDEN_MAIN_WINDOW } from './constants';
+import { setMainWindowId } from './dev-window';
 
 const isSafeColor = (value: string): boolean =>
     /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(value) ||
@@ -81,6 +82,7 @@ export const openMainAndOptionalSplash = (args: {
 
     const openMain = (opts: NativeWindowOptions): void => {
         const id = native.createWindow(url, title, preload, opts, listener);
+        setMainWindowId(id);
         onSpawn(id);
     };
 
@@ -177,5 +179,6 @@ export const openMainAndOptionalSplash = (args: {
         openMain(DEFAULT_MAIN_WINDOW);
         return;
     }
+    setMainWindowId(mainId);
     onSpawn(mainId);
 };

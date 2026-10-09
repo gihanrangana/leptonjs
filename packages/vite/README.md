@@ -54,9 +54,10 @@ Watch the backend tree. Routes and events live there, so a separate `src/shared`
 | `LEPTON_WATCH_DIRS` | Absolute watch paths, comma-separated |
 | `LEPTON_SETUP_MODULE` | Resolved `app.ts`, or `setupModule` |
 
-4. Restarts the backend up to 5 times if it exits with a non-zero code.
-5. Forwards stdout and stderr into the CLI TUI when `LEPTON_TUI=1`.
-6. Stops the backend when Vite closes.
+4. If the backend exits with code `75`, starts it again (developer-menu restart). That is not counted as a crash.
+5. Restarts the backend up to 5 times if it exits with any other non-zero code.
+6. Forwards stdout and stderr into the CLI TUI when `LEPTON_TUI=1`.
+7. Stops the backend when Vite closes. Exit `0` still ends the whole `leptonjs dev` session.
 
 `app.ts` must re-export `api` and `events`. The reloader imports that module, then registers whatever it exports. See the [core README](../core/README.md).
 

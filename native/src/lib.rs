@@ -6,10 +6,12 @@ use napi::{
     Status, Unknown,
 };
 use napi_derive::napi;
-use std::sync::{Once, OnceLock};
 use std::{
     collections::HashMap,
-    sync::atomic::{AtomicU32, Ordering},
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        Once, OnceLock,
+    },
 };
 use tao::{
     event_loop::{EventLoopBuilder, EventLoopProxy},
@@ -47,6 +49,7 @@ pub struct WindowOptions {
     pub width: Option<u32>,
     pub height: Option<u32>,
     pub background_color: Option<Vec<u8>>,
+    pub dev_tools: Option<bool>,
 }
 
 type WindowEventCallback =
@@ -65,6 +68,12 @@ enum Command {
         id: u32,
     },
     CloseWindow {
+        id: u32,
+    },
+    OpenDevTools {
+        id: u32,
+    },
+    ReloadWindow {
         id: u32,
     },
     Quit,
@@ -149,6 +158,10 @@ fn run_loop(event_loop: tao::event_loop::EventLoop<Command>) {
                         }
                     }
 
+                    if options.dev_tools.unwrap_or(false) {
+                        builder = builder.with_devtools(true);
+                    }
+
                     let webview = match builder.build(&window) {
                         Ok(w) => w,
                         Err(e) => {
@@ -207,6 +220,22 @@ fn run_loop(event_loop: tao::event_loop::EventLoop<Command>) {
                                 },
                                 ThreadsafeFunctionCallMode::NonBlocking,
                             );
+                        }
+                    }
+                }
+                Command::OpenDevTools { id } => {
+                    for entry in windows.values() {
+                        if entry.id == id {
+                            entry.webview.open_devtools();
+                            break;
+                        }
+                    }
+                }
+                Command::ReloadWindow { id } => {
+                    for entry in windows.values() {
+                        if entry.id == id {
+                            let _ = entry.webview.reload();
+                            break;
                         }
                     }
                 }
@@ -314,6 +343,22 @@ pub fn show_window(id: u32) -> napi::Result<()> {
 pub fn close_window(id: u32) -> napi::Result<()> {
     if let Some(shared) = SHARED.get() {
         let _ = shared.proxy.send_event(Command::CloseWindow { id });
+    }
+    Ok(())
+}
+
+#[napi]
+pub fn open_dev_tools(id: u32) -> napi::Result<()> {
+    if let Some(shared) = SHARED.get() {
+        let _ = shared.proxy.send_event(Command::OpenDevTools { id });
+    }
+    Ok(())
+}
+
+#[napi]
+pub fn reload_window(id: u32) -> napi::Result<()> {
+    if let Some(shared) = SHARED.get() {
+        let _ = shared.proxy.send_event(Command::ReloadWindow { id });
     }
     Ok(())
 }

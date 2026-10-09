@@ -22,6 +22,7 @@ export interface NativeWindowOptions {
     width?: number;
     height?: number;
     backgroundColor?: [number, number, number, number];
+    devTools?: boolean;
 }
 
 export interface NativeModule {
@@ -34,6 +35,8 @@ export interface NativeModule {
     ): number;
     showWindow(id: number): void;
     closeWindow(id: number): void;
+    openDevTools(id: number): void;
+    reloadWindow(id: number): void;
     setAppUserModelId(id: string): void;
     quit(): void;
 }

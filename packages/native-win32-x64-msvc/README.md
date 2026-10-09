@@ -27,6 +27,8 @@ npm install @leptonjs/native
 | `createWindow(url, title, initScript, options, onEvent)` | Create a native window with embedded WebView |
 | `showWindow(id)` | Show a hidden window |
 | `closeWindow(id)` | Close a window |
+| `openDevTools(id)` | Open WebView2 DevTools (`options.devTools` must be true) |
+| `reloadWindow(id)` | Reload the WebView |
 | `setAppUserModelId(id)` | Set the Windows app user model ID |
 | `quit()` | Shut down the native event loop |
 
