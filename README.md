@@ -7,7 +7,7 @@ Build native desktop apps with **Node.js** and **web technologies** — no bundl
 
 
 
-LeptonJS is an experiment: a Node.js backend behind the OS webview (`wry` / `tao`), with typed routes and events. It is not production-ready. `0.1.0-beta.4` runs on Windows x64 only, the API can still change, and there is no `leptonjs create` scaffold.
+LeptonJS is an experiment: a Node.js backend behind the OS webview (`wry` / `tao`), with typed routes and events. It is not production-ready. `0.1.0-beta.5` runs on Windows x64 only, the API can still change, and there is no `leptonjs create` scaffold.
 
 Try `[examples/react](examples/react/)`. Break it. Open an issue with what failed, including your Node version and the `--no-tui` log.
 
@@ -323,6 +323,8 @@ export default defineConfig({
 npx leptonjs dev
 ```
 
+A floating **Dev** button appears in the window. Use it to reload the UI, open WebView2 inspect, or restart the backend. It is not injected in production (`leptonjs start` / packed apps).
+
 Restart `leptonjs dev` after you change `@leptonjs/core` or the preload script. The preload is injected when the window is created.
 
 ---
@@ -548,6 +550,8 @@ On a saved `.ts` or `.js` file it:
 
 If `app.ts` does not export `api` or `events`, reload keeps the objects captured at startup.
 
+The Dev overlay **Reload UI** refreshes the WebView only. **Restart app** exits the backend with code `75` so the Vite plugin respawns it without stopping `leptonjs dev`.
+
 ---
 
 
@@ -572,15 +576,15 @@ When you install from npm instead of this workspace:
 ```json
 {
     "dependencies": {
-        "@leptonjs/core": "0.1.0-beta.4",
-        "@leptonjs/client": "0.1.0-beta.4",
-        "@leptonjs/registry": "0.1.0-beta.4",
-        "@leptonjs/react": "0.1.0-beta.4",
+        "@leptonjs/core": "0.1.0-beta.5",
+        "@leptonjs/client": "0.1.0-beta.5",
+        "@leptonjs/registry": "0.1.0-beta.5",
+        "@leptonjs/react": "0.1.0-beta.5",
         "zod": "^4.4.3"
     },
     "devDependencies": {
-        "@leptonjs/cli": "0.1.0-beta.4",
-        "@leptonjs/vite": "0.1.0-beta.4"
+        "@leptonjs/cli": "0.1.0-beta.5",
+        "@leptonjs/vite": "0.1.0-beta.5"
     }
 }
 ```

@@ -14,7 +14,7 @@ Install and build the workspace from the repository root first (`pnpm install` a
 pnpm leptonjs -- dev react
 ```
 
-That starts Vite, the Node backend, and a WebView2 window. Node must be 22.23 or newer, on Windows x64, with the WebView2 Evergreen runtime installed.
+That starts Vite, the Node backend, and a WebView2 window. A floating **Dev** button is in the window: reload the UI, open inspect, or restart the backend. Node must be 22.23 or newer, on Windows x64, with the WebView2 Evergreen runtime installed.
 
 Other commands, from the repository root:
 

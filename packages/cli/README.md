@@ -26,7 +26,8 @@ What happens:
 1. Starts the Vite dev server (frontend HMR).
 2. Spawns the Node.js backend via `tsx` with file watching.
 3. Opens the native WebView window pointing at `http://127.0.0.1:<port>`.
-4. On a watched file change, the backend reloads `app.ts` beside the entry file, re-registers exported `api` and `events`, and runs `setup()` again. Restart the command after you rebuild a `@leptonjs/*` package.
+4. Injects a floating Dev overlay (reload UI, WebView2 inspect, restart backend). Not present in `leptonjs start` or packed apps.
+5. On a watched file change, the backend reloads `app.ts` beside the entry file, re-registers exported `api` and `events`, and runs `setup()` again. Restart the command after you rebuild a `@leptonjs/*` package.
 
 ### `leptonjs build [target]`
 

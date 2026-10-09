@@ -50,6 +50,14 @@ Show a hidden window.
 
 Programmatically close a window.
 
+### `native.openDevTools(id)`
+
+Open the WebView2 DevTools window for that id. The window must have been created with `devTools: true`.
+
+### `native.reloadWindow(id)`
+
+Reload the WebView for that id.
+
 ### `native.setAppUserModelId(id)`
 
 Set the Windows app user model ID (affects taskbar grouping).
@@ -70,6 +78,7 @@ interface NativeWindowOptions {
   width?: number;
   height?: number;
   backgroundColor?: [number, number, number, number]; // RGBA
+  devTools?: boolean; // allow F12 / openDevTools. Omit or false in production.
 }
 ```
 

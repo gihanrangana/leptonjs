@@ -69,6 +69,18 @@ In dev, the CLI supplies the page URL. In production, set `assetDir` or `pageHtm
 
 `setup` should start work such as timers. Do not register routes there when you passed `api`. Do not call `bindEvents` there when you passed `events`.
 
+### Developer menu
+
+When `LEPTON_DEV` is `'1'`, `app.start` registers reserved routes and injects a floating overlay into the main window (not the splash). Production builds do not get either.
+
+| Overlay action | Route | What it does |
+| --- | --- | --- |
+| Reload UI | `lepton.dev.reloadUi` | Reloads the WebView |
+| Open inspect | `lepton.dev.openInspect` | Opens WebView2 DevTools |
+| Restart app | `lepton.dev.restartApp` | Exits the backend with code `75` so Vite starts it again |
+
+Do not define your own routes under `lepton.dev`. The overlay is `src/ipc/dev-overlay.js`, copied into `dist` on package build and read at window create.
+
 ### `app.on(event, callback)`
 
 | Event | When |
