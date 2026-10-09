@@ -12,6 +12,7 @@ concurrency:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   publish:
@@ -42,6 +43,9 @@ jobs:
           cache: pnpm
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Use npm that supports trusted publishing
+        run: npm install -g npm@11
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -58,7 +62,7 @@ jobs:
       - name: Build native, host, and packages
         run: pnpm build
 
-      - name: Publish unpublished @leptonjs packages
-        run: node scripts/publish-unpublished.mjs
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    #   - name: Publish unpublished @leptonjs packages
+    #     run: node scripts/publish-unpublished.mjs
+    #     env:
+    #       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -36,14 +36,24 @@ if (unpublished.length === 0) {
     process.exit(0);
 }
 
-const args = [
-    'publish',
-    '-r',
-    ...unpublished.flatMap((name) => ['--filter', name]),
-    '--access',
-    'public',
-    '--no-git-checks',
-];
+for (const name of unpublished) {
+    const dir = join(packagesDir, name.replace('@leptonjs/', ''));
+    const published = spawnSync('npm', ['publish', '--access', 'public', '--tag', 'beta'], {
+        cwd: dir,
+        stdio: 'inherit',
+        shell,
+    });
+    if (published.status !== 0) process.exit(published.status ?? 1);
+}
 
-const published = spawnSync('pnpm', args, { stdio: 'inherit', shell });
-process.exit(published.status ?? 1);
+// const args = [
+//     'publish',
+//     '-r',
+//     ...unpublished.flatMap((name) => ['--filter', name]),
+//     '--access',
+//     'public',
+//     '--no-git-checks',
+// ];
+
+// const published = spawnSync('pnpm', args, { stdio: 'inherit', shell });
+// process.exit(published.status ?? 1);
