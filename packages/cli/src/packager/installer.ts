@@ -20,6 +20,9 @@ const fillTemplate = (template: string, vars: Record<string, string>): string =>
     return out;
 };
 
+export const installerBaseName = (config: PackConfig): string =>
+    `${config.appName}-${config.version}-${nodeDistPlatform(config.platform, config.arch)}-setup`;
+
 export const buildInstaller = async (config: PackConfig): Promise<string> => {
     if (config.platform !== 'win32') throw new Error(`Inno Setup installer is Windows-only.`);
 
@@ -42,7 +45,7 @@ export const buildInstaller = async (config: PackConfig): Promise<string> => {
         APP_NAME: config.appName,
         APP_VERSION: config.version,
         SOURCE_DIR: sourceDir,
-        OUTPUT_DIR: sourceDir,
+        OUTPUT_DIR: toIssPath(config.outputDir),
         NODE_VERSION: manifest.nodeVersion,
         NODE_MAJOR: String(manifest.nodeMajor),
         NODE_DIST: nodeDistPlatform(config.platform, config.arch),
@@ -52,9 +55,10 @@ export const buildInstaller = async (config: PackConfig): Promise<string> => {
         BUNDLE_RUNTIME: config.bundleRuntime ? '1' : '0',
         ENABLE_BYTECODE: config.enableBytecode ? '1' : '0',
         APP_ICON: existsSync(config.iconPath) ? toIssPath(config.iconPath) : '',
+        OUTPUT_BASE_FILENAME: installerBaseName(config),
     });
 
-    const issPath = join(config.releaseDir, '_installer.iss');
+    const issPath = join(config.outputDir, '_installer.iss');
     writeFileSync(issPath, filled, 'utf-8');
 
     const iscc = await ensureIscc();
@@ -64,7 +68,7 @@ export const buildInstaller = async (config: PackConfig): Promise<string> => {
             `ISCC failed (code ${compiled.code}):\n${compiled.stderr || compiled.stdout}`,
         );
 
-    const setupExe = join(config.releaseDir, `${config.appName}-Setup.exe`);
+    const setupExe = join(config.outputDir, `${installerBaseName(config)}.exe`);
     if (!existsSync(setupExe)) {
         throw new Error(`ISCC did not produce ${setupExe}`);
     }

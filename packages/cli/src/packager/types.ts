@@ -20,6 +20,7 @@ export interface PackConfig {
     readonly backendTsconfig: string | null;
     readonly assetDir: string;
     readonly releaseDir: string;
+    readonly outputDir: string;
     readonly platform: NodeJS.Platform;
     readonly arch: NodeJS.Architecture;
     readonly nodeVersion: string;
