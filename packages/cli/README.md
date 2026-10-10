@@ -70,8 +70,27 @@ leptonjs pack react --no-tui --no-installer
 | `--no-bytecode` | Skip V8 bytecode compilation of backend code |
 | `--no-node-runtime` | Don't bundle the Node.js runtime |
 | `--skip-integrity` | Skip integrity checks |
-| `--no-installer` | Build a portable directory instead of an installer |
-| `--bundle-runtime` | Bundle the Node.js runtime into the output |
+| `--no-installer` | Write only `<releaseDir>/portable/` |
+| `--bundle-runtime` | Bundle the Node.js runtime into the installer |
+
+`leptonjs pack` writes the unpacked app under `<releaseDir>/portable/` and the installer next to that folder. The default `releaseDir` is `release/`.
+
+```text
+release/
+  portable/
+    app/
+    assets/
+    runtime/
+      <app>.exe
+      <app>-runtime.exe
+    runtime-manifest.json
+    integrity.json
+  <app>-<version>-win-x64-setup.exe
+```
+
+`<app>.exe` is the portable launcher. `<app>-runtime.exe` is the bundled Node binary. `--no-installer` leaves only `release/portable/`. Run `release/portable/runtime/<app>.exe`.
+
+The setup filename is `<app>-<version>-<target>-setup.exe`. `<target>` is the Node dist name for the machine that packed the app (`win-x64` on this beta).
 
 ### Global Flags
 
