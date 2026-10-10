@@ -62,7 +62,5 @@ jobs:
       - name: Build native, host, and packages
         run: pnpm build
 
-    #   - name: Publish unpublished @leptonjs packages
-    #     run: node scripts/publish-unpublished.mjs
-    #     env:
-    #       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish unpublished @leptonjs packages
+        run: node scripts/publish-unpublished.mjs
