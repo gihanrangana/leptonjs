@@ -20,6 +20,7 @@ packages/cli/host/*
 !packages/native-win32-x64-msvc/*.node
 
 # Examples
+.lepton/
 examples/**/dist-backend/
 examples/**/release/
 

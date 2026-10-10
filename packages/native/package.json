@@ -1,6 +1,6 @@
 {
     "name": "@leptonjs/native",
-    "version": "0.1.0-beta.5",
+    "version": "0.1.0-beta.6",
     "description": "LeptonJS native addon loader.",
     "license": "MIT",
     "type": "commonjs",

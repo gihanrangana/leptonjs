@@ -30,7 +30,7 @@ export const verifyIntegrity = async (config: PackConfig): Promise<IntegrityRepo
     const mainJsc = join(appDir, 'main.jsc');
     const mainJs = join(appDir, 'main.js');
 
-    if (!existsSync(launcher)) throw new Error('launcher.cjs is missing from release/app');
+    if (!existsSync(launcher)) throw new Error('launcher.cjs is missing from release/portable/app');
 
     const launcherBytes = statSync(launcher).size;
     if (launcherBytes > 1024) {

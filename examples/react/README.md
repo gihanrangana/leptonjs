@@ -24,6 +24,8 @@ pnpm leptonjs -- start react --no-tui
 pnpm leptonjs -- pack react --no-tui --no-installer
 ```
 
+A pack writes `release/portable/` and, unless you pass `--no-installer`, `release/Example-react-0.0.0-win-x64-setup.exe`. The portable launcher is `release/portable/runtime/Example-react.exe`.
+
 `npm run dev` inside this folder starts Vite alone. It does not open the native window. Use `leptonjs dev`.
 
 ## Layout

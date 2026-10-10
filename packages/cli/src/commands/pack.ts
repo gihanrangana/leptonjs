@@ -1,8 +1,8 @@
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { buildBackend, compileBytecode, copyBytenodeRuntime } from '../packager/backend';
 import { buildFrontend } from '../packager/frontend';
-import { buildInstaller } from '../packager/installer';
+import { buildInstaller, installerBaseName } from '../packager/installer';
 import { verifyIntegrity } from '../packager/integrity';
 import { generateLauncher } from '../packager/launcher';
 import { copyMsvcCrt } from '../packager/msvc-crt';
@@ -36,12 +36,17 @@ const printReport = (
     config: PackConfig,
     steps: StepResult[],
     totalMs: number,
-    outputSize: number,
 ): void => {
     reporter.log('');
     reporter.log(`Pack complete  ${config.appName} v${config.version}`);
-    reporter.log(`  Output:    ${config.releaseDir}`);
-    reporter.log(`  Size:      ${formatBytes(outputSize)}`);
+    reporter.log(`  Output:    ${config.outputDir}`);
+    reporter.log(`  Portable:  ${formatBytes(dirSize(config.releaseDir))}`);
+
+    if (config.enableInstaller && config.platform === 'win32') {
+        const setupExe = join(config.outputDir, `${installerBaseName(config)}.exe`);
+        const installerSize = existsSync(setupExe) ? statSync(setupExe).size : 0;
+        reporter.log(`  Installer: ${formatBytes(installerSize)}`);
+    }
     reporter.log(`  Duration:  ${(totalMs / 1000).toFixed(1)}s`);
     reporter.log(`  Integrity: ${config.skipIntegrity ? 'skipped' : 'passed'}`);
     for (const step of steps) {
@@ -66,6 +71,8 @@ export const runPack = async (
     const appRoot = resolveAppRoot(target);
     const project = resolveProject(appRoot);
 
+    const outputDir = project.releaseDir;
+
     const config: PackConfig = {
         appRoot: project.appRoot,
         appName: project.appName,
@@ -74,7 +81,8 @@ export const runPack = async (
         backendEntry: project.backendEntry,
         backendTsconfig: project.backendTsconfig,
         assetDir: project.assetDir,
-        releaseDir: project.releaseDir,
+        releaseDir: join(outputDir, 'portable'),
+        outputDir: outputDir,
         platform: process.platform,
         arch: process.arch,
         nodeVersion: f.nodeVersion ?? project.config.nodeVersion ?? DEFAULT_NODE_VERSION,
@@ -97,7 +105,7 @@ export const runPack = async (
     reporter.log(`Platform: ${config.platform}-${config.arch}`);
     reporter.log(`Node.js:  ${config.nodeVersion}`);
     reporter.log(`Bytecode: ${config.enableBytecode ? 'enabled' : 'disabled'}`);
-    reporter.log(`Output:   ${config.releaseDir}`);
+    reporter.log(`Output:   ${config.outputDir}`);
 
     const steps: StepResult[] = [];
     const t0 = Date.now();
@@ -105,7 +113,7 @@ export const runPack = async (
     try {
         steps.push(
             await runStep(reporter, 'Clean release directory', () => {
-                emptyDir(config.releaseDir);
+                emptyDir(config.outputDir);
                 mkdirSync(join(config.releaseDir, 'app'), { recursive: true });
             }),
         );
@@ -167,5 +175,5 @@ export const runPack = async (
         throw e;
     }
 
-    printReport(reporter, config, steps, Date.now() - t0, dirSize(config.releaseDir));
+    printReport(reporter, config, steps, Date.now() - t0);
 };

@@ -7,7 +7,7 @@ Build native desktop apps with **Node.js** and **web technologies** — no bundl
 
 
 
-LeptonJS is an experiment: a Node.js backend behind the OS webview (`wry` / `tao`), with typed routes and events. It is not production-ready. `0.1.0-beta.5` runs on Windows x64 only, the API can still change, and there is no `leptonjs create` scaffold.
+LeptonJS is an experiment: a Node.js backend behind the OS webview (`wry` / `tao`), with typed routes and events. It is not production-ready. `0.1.0-beta.6` runs on Windows x64 only, the API can still change, and there is no `leptonjs create` scaffold.
 
 Try `[examples/react](examples/react/)`. Break it. Open an issue with what failed, including your Node version and the `--no-tui` log.
 
@@ -436,11 +436,23 @@ leptonjs pack [target] [flags]      # Package for distribution
 | `--no-bytecode`        | Skip V8 bytecode compilation            |
 | `--no-node-runtime`    | Don't bundle the Node.js runtime        |
 | `--skip-integrity`     | Skip integrity checks                   |
-| `--no-installer`       | Portable directory instead of installer |
+| `--no-installer`       | Write only `release/portable/`          |
 | `--bundle-runtime`     | Bundle the Node.js runtime              |
 
 
-See the `@leptonjs/cli` [README](packages/cli/README.md) for the rest.
+`leptonjs pack` writes the unpacked app under `release/portable/` and the installer beside that folder:
+
+```text
+release/
+  portable/
+    runtime/<app>.exe
+    runtime/<app>-runtime.exe
+  <app>-<version>-win-x64-setup.exe
+```
+
+`<app>.exe` is the portable launcher. `<app>-runtime.exe` is the bundled Node binary. `--no-installer` leaves only `release/portable/`. Run `release/portable/runtime/<app>.exe`.
+
+The setup filename includes the app version and the Node dist target (`win-x64` on this beta). See the `@leptonjs/cli` [README](packages/cli/README.md) for the rest.
 
 ### Configuration
 
@@ -576,15 +588,15 @@ When you install from npm instead of this workspace:
 ```json
 {
     "dependencies": {
-        "@leptonjs/core": "0.1.0-beta.5",
-        "@leptonjs/client": "0.1.0-beta.5",
-        "@leptonjs/registry": "0.1.0-beta.5",
-        "@leptonjs/react": "0.1.0-beta.5",
+        "@leptonjs/core": "0.1.0-beta.6",
+        "@leptonjs/client": "0.1.0-beta.6",
+        "@leptonjs/registry": "0.1.0-beta.6",
+        "@leptonjs/react": "0.1.0-beta.6",
         "zod": "^4.4.3"
     },
     "devDependencies": {
-        "@leptonjs/cli": "0.1.0-beta.5",
-        "@leptonjs/vite": "0.1.0-beta.5"
+        "@leptonjs/cli": "0.1.0-beta.6",
+        "@leptonjs/vite": "0.1.0-beta.6"
     }
 }
 ```

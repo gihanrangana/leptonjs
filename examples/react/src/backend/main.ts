@@ -8,7 +8,7 @@ void app.start({
     events,
     title: 'LeptonJS Desktop - React',
     splash: {
-        image: 'src/assets/hero.png',
+        image: 'src/assets/logo-full.png',
         backgroundColor: '#0f1419',
         width: 520,
         height: 360,
