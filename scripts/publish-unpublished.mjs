@@ -28,7 +28,7 @@ for (const entry of readdirSync(packagesDir, { withFileTypes: true })) {
     }
 
     console.log(`queue ${id}`);
-    unpublished.push({ name: pkg.name, version: pkg.version }));
+    unpublished.push({ name: pkg.name, version: pkg.version });
 }
 
 if (unpublished.length === 0) {
@@ -39,7 +39,7 @@ if (unpublished.length === 0) {
 const args = [
     'publish',
     '-r',
-    ...unpublished.flatMap(({name}) => ['--filter', name]),
+    ...unpublished.flatMap(({ name }) => ['--filter', name]),
     '--access',
     'public',
     '--tag',
